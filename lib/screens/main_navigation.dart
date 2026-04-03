@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'today_menu_screen.dart';
-
+import 'calendar_screen.dart';
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -14,7 +14,7 @@ class _MainNavigationState extends State<MainNavigation> {
   // These are the three main screens of your app
   final List<Widget> _screens = [
     const TodayMenuScreen(),
-    const Center(child: Text('Calendar / Archive')), // Placeholder for later
+    const CalendarScreen(), // Placeholder for later
     const Center(child: Text('My Page')), // Placeholder for later
   ];
 
