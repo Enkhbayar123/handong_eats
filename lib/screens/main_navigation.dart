@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'today_menu_screen.dart';
 import 'calendar_screen.dart';
+import 'my_profile_screen.dart';
+
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -15,7 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     const TodayMenuScreen(),
     const CalendarScreen(), // Placeholder for later
-    const Center(child: Text('My Page')), // Placeholder for later
+    const MyProfileScreen(), // Placeholder for later
   ];
 
   void _onItemTapped(int index) {

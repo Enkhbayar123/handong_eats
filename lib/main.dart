@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/main_navigation.dart';
+import 'screens/login_screen.dart'; // <--- Import the login screen instead
 
 void main() {
   runApp(const HandongEatsApp());
@@ -12,11 +12,12 @@ class HandongEatsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Handong Eats',
+      debugShowCheckedModeBanner: false, // Turn off that little "DEBUG" banner in the corner!
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
         useMaterial3: true,
       ),
-      home: const MainNavigation(),
+      home: const LoginScreen(), // <--- Set this as the initial route
     );
   }
 }

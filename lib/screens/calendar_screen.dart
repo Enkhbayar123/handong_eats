@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'edit_log_screen.dart';
+import 'select_meal_screen.dart';
+import 'menu_archive_screen.dart';
 
 // --- MOCK DATA MODELS ---
 class MealLog {
@@ -207,7 +210,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
               // Manual Add Button
               IconButton(
                 onPressed: () {
-                  print("Open Manual Add Modal");
+                  // Open the Select Meal screen as a full-screen modal
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SelectMealScreen(),
+                      fullscreenDialog: true, // This makes it slide up from the bottom like a true modal!
+                    ),
+                  );
                 },
                 icon: const Icon(Icons.add_circle, color: Colors.redAccent, size: 28),
               )
@@ -239,7 +249,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03), 
+            blurRadius: 10, 
+            offset: const Offset(0, 4)
+          )
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -273,6 +289,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ],
               ),
             ),
+            // --- NEW: Edit Button ---
+            IconButton(
+              onPressed: () {
+                // Navigate to the Edit Log Screen, passing the specific log data
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditLogScreen(
+                      foodName: log.foodName,
+                      restaurant: log.restaurant,
+                      date: "Oct ${log.date.day}", // A simple formatted date
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit_outlined, color: Colors.grey, size: 20),
+              splashRadius: 20, 
+            )
           ],
         ),
       ),
@@ -304,17 +338,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildArchiveRestaurantCard(String name, String menuPreview) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: ListTile(
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        subtitle: Text(menuPreview, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MenuArchiveScreen(archiveDate: _selectedDate),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: ListTile(
+          title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          subtitle: Text(menuPreview, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        ),
       ),
     );
   }
