@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'today_menu_screen.dart'; // Make sure to import MenuItem
+import '../models/models.dart';
 
 class PhotoGalleryScreen extends StatelessWidget {
-  final MenuItem dish;
+  final MenuItemModel dish;
 
   // Mocking 24 photos for the grid layout
   final List<String> mockPhotos = List.generate(

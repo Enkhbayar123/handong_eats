@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "457484292778",
+    "project_id": "handong-eats-61f3d",
+    "storage_bucket": "handong-eats-61f3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457484292778:android:5549f5068cb97232c0f6d3",
+        "android_client_info": {
+          "package_name": "com.example.handong_eats"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBq1PA8D4ggqG_RmumqfrwHZs2iluk_2l4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

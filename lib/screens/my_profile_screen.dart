@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'nutrition_dashboard_screen.dart';
+import '../services/database_seeder.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -127,7 +129,34 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // --- 4. App Settings & Logout ---
+            // --- 4. Health & Diet ---
+            _buildSectionHeader("Health & Diet"),
+            Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+                      child: Icon(Icons.pie_chart_rounded, color: Colors.blue[600], size: 20),
+                    ),
+                    title: const Text("My Nutrition Dashboard", style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: const Text("Track your calories and macros"),
+                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NutritionDashboardScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // --- 5. App Settings & Logout ---
             _buildSectionHeader("App Settings"),
             Container(
               color: Colors.white,
@@ -146,6 +175,22 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       setState(() {
                         _pushNotificationsEnabled = value;
                       });
+                    },
+                  ),
+                  const Divider(height: 1, indent: 60),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.orange[50], shape: BoxShape.circle),
+                      child: Icon(Icons.cloud_upload, color: Colors.orange[600], size: 20),
+                    ),
+                    title: Text("Seed Database (Debug)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[800])),
+                    onTap: () async {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Seeding Database...')));
+                      await DatabaseSeeder.runAllSeeds();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Database seeded successfully!')));
+                      }
                     },
                   ),
                   const Divider(height: 1, indent: 60),
