@@ -27,8 +27,8 @@ class MenuArchiveScreen extends StatelessWidget {
       ArchiveItem("Bulgogi Bowl", 94, "₩8,200", "https://images.unsplash.com/photo-1544025162-d76694265947?w=200&q=80"),
     ]),
     ArchiveRestaurant("Mom's Kitchen (맘스키친)", [
-      ArchiveItem("Classic Bibimbap", 64, "₩7,000", "https://images.unsplash.com/photo-1553163147-622abc30ffb6?w=200&q=80"),
-      ArchiveItem("Handmade Tonkatsu", 112, "₩8,500", "https://images.unsplash.com/photo-1598514982205-f36b96d1e8dd?w=200&q=80"),
+      ArchiveItem("Classic Bibimbap", 64, "₩7,000", "https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80"),
+      ArchiveItem("Handmade Tonkatsu", 112, "₩8,500", "https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80"),
     ]),
     ArchiveRestaurant("Handong Lounge (한동라운지)", [
       ArchiveItem("Chef's Special Pasta", 42, "₩12,000", "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=200&q=80"),
@@ -146,6 +146,12 @@ class MenuArchiveScreen extends StatelessWidget {
                 width: 70,
                 height: 70,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 70,
+                  height: 70,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.fastfood, color: Colors.grey),
+                ),
               ),
             ),
             const SizedBox(width: 16),

@@ -16,14 +16,16 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
-        title: const Text("Today's Menu", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Today's Menu",
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      backgroundColor: Colors.grey[50],
-      // Outer Stream: Restaurants
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
         builder: (context, snapshotR) {
@@ -32,7 +34,11 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
           }
           if (!snapshotR.hasData || snapshotR.data!.docs.isEmpty) {
             return const Center(
-              child: Text("No restaurants found.\nGo to My Profile and tap 'Seed Database'.", textAlign: TextAlign.center),
+              child: Text(
+                "No restaurants found.\nThe database is empty or still initializing.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
             );
           }
 
@@ -44,7 +50,6 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
             _selectedRestaurantIndex = 0;
           }
 
-          // Inner Stream: Menu Items
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('menu_items').snapshots(),
             builder: (context, snapshotM) {
@@ -53,29 +58,31 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
               }
 
               List<MenuItemModel> allMeals = snapshotM.data?.docs
-                  .map((doc) => MenuItemModel.fromFirestore(doc))
-                  .toList() ?? [];
+                      .map((doc) => MenuItemModel.fromFirestore(doc))
+                      .toList() ??
+                  [];
 
-              // Compute podium
+              // Compute podium (Top 3 rated items)
               List<MenuItemModel> sortedMeals = List.from(allMeals);
               sortedMeals.sort((a, b) => b.averageRating.compareTo(a.averageRating));
               List<MenuItemModel> podiumMeals = sortedMeals.take(3).toList();
 
               // Get active restaurant's meals
               RestaurantModel activeRestaurant = restaurants[_selectedRestaurantIndex];
-              List<MenuItemModel> activeMenu = allMeals
-                  .where((m) => m.restaurantId == activeRestaurant.id)
-                  .toList();
+              List<MenuItemModel> activeMenu =
+                  allMeals.where((m) => m.restaurantId == activeRestaurant.id).toList();
 
               return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (podiumMeals.isNotEmpty) _buildPodiumSection(podiumMeals),
-                    if (podiumMeals.isNotEmpty) const SizedBox(height: 16),
+                    if (podiumMeals.isNotEmpty) const SizedBox(height: 24),
                     _buildRestaurantFilter(restaurants),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     _buildMenuListing(activeRestaurant, activeMenu),
+                    const SizedBox(height: 40),
                   ],
                 ),
               );
@@ -86,12 +93,13 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     );
   }
 
+  // --- PODIUM SECTION (GORGEOUS Visual First Carousel) ---
   Widget _buildPodiumSection(List<MenuItemModel> meals) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0),
+          padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 12.0),
           child: Row(
             children: [
               const Text(
@@ -99,76 +107,117 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.local_fire_department, color: Colors.orange[400], size: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.local_fire_department_rounded, color: Colors.amber, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      "HOT",
+                      style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w800),
+                    )
+                  ],
+                ),
+              ),
             ],
           ),
         ),
         SizedBox(
-          height: 190,
+          height: 195,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             itemCount: meals.length,
             itemBuilder: (context, index) {
               final meal = meals[index];
               final isFirstPlace = index == 0;
+              final isSecondPlace = index == 1;
+
+              Color ringColor = Colors.white;
+              Color badgeColor = const Color(0xFF6B7280);
+              if (isFirstPlace) {
+                ringColor = const Color(0xFFFBBF24); // Gold
+                badgeColor = const Color(0xFFF59E0B);
+              } else if (isSecondPlace) {
+                ringColor = const Color(0xFF9CA3AF); // Silver
+                badgeColor = const Color(0xFF4B5563);
+              } else {
+                ringColor = const Color(0xFFD97706); // Bronze
+                badgeColor = const Color(0xFF78350F);
+              }
 
               return Container(
-                width: 130,
-                margin: const EdgeInsets.only(right: 20.0),
+                width: 140,
+                margin: const EdgeInsets.only(right: 12.0),
                 child: Column(
                   children: [
                     Stack(
                       clipBehavior: Clip.none,
                       alignment: Alignment.bottomRight,
                       children: [
-                        Container(
-                          height: 110,
-                          width: 110,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => DishDetailScreen(dish: meal)),
+                            );
+                          },
+                          child: Container(
+                            height: 110,
+                            width: 110,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                              border: Border.all(color: ringColor, width: 3),
+                            ),
+                            child: ClipOval(
+                              child: Image.network(
+                                meal.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(color: Colors.grey[300], child: const Icon(Icons.restaurant)),
                               ),
-                            ],
-                            border: isFirstPlace
-                                ? Border.all(color: Colors.redAccent, width: 3)
-                                : Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: ClipOval(
-                            child: Image.network(
-                              meal.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(color: Colors.grey[300], child: const Icon(Icons.restaurant)),
                             ),
                           ),
                         ),
                         Positioned(
-                          bottom: 0,
-                          right: -5,
+                          bottom: 2,
+                          right: 2,
                           child: Container(
-                            height: 32,
-                            width: 32,
+                            height: 28,
+                            width: 28,
                             decoration: BoxDecoration(
-                                color: isFirstPlace ? Colors.redAccent : Colors.grey[800],
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  )
-                                ]),
+                              color: badgeColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
                             child: Center(
                               child: Text(
                                 "${index + 1}",
                                 style: const TextStyle(
-                                    color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ),
@@ -176,22 +225,25 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(meal.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          color: Colors.black87,
-                        )),
+                    Text(
+                      meal.name,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                        const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
                         const SizedBox(width: 2),
                         Text(
                           meal.averageRating.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: Colors.black87),
                         ),
                       ],
                     ),
@@ -205,11 +257,13 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     );
   }
 
+  // --- RESTAURANT FILTER (Pill-shaped modern filter bar) ---
   Widget _buildRestaurantFilter(List<RestaurantModel> restaurants) {
     return SizedBox(
-      height: 40,
+      height: 44,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         itemCount: restaurants.length,
         itemBuilder: (context, index) {
@@ -226,8 +280,21 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                   _selectedRestaurantIndex = index;
                 });
               },
-              selectedColor: Colors.black87,
-              labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87),
+              backgroundColor: Colors.white,
+              selectedColor: const Color(0xFF1E293B),
+              shadowColor: Colors.black.withOpacity(0.05),
+              elevation: isSelected ? 4 : 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected ? Colors.transparent : const Color(0xFFE5E7EB),
+                ),
+              ),
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : const Color(0xFF4B5563),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
           );
         },
@@ -235,15 +302,16 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     );
   }
 
+  // --- MENU LISTING (Modern cards with details) ---
   Widget _buildMenuListing(RestaurantModel activeRestaurant, List<MenuItemModel> activeMenu) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
@@ -251,37 +319,49 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                   children: [
                     Text(
                       activeRestaurant.name,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     _buildStatusBadge(activeRestaurant),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
                 ),
                 child: Text(
                   "${activeRestaurant.openTime} - ${activeRestaurant.closeTime}",
-                  style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Color(0xFF047857), fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           if (activeMenu.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text("No items available today.", style: TextStyle(color: Colors.grey)),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: const Center(
+                child: Text(
+                  "No items available today.",
+                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
+              ),
             ),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: activeMenu.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            separatorBuilder: (context, index) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final item = activeMenu[index];
               return GestureDetector(
@@ -296,10 +376,10 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withOpacity(0.03),
                         blurRadius: 15,
                         offset: const Offset(0, 4),
                       ),
@@ -308,20 +388,20 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(18),
                           child: Image.network(
                             item.imageUrl,
                             width: 90,
                             height: 90,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Container(
-                                width: 90,
-                                height: 90,
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.fastfood, color: Colors.grey)),
+                              width: 90,
+                              height: 90,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.fastfood, color: Colors.grey),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -329,51 +409,69 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.name,
-                                  style: const TextStyle(
-                                      fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black87)),
+                              Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
                               const SizedBox(height: 4),
-                              Text("₩${item.price}",
-                                  style: const TextStyle(
-                                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.redAccent)),
+                              Text(
+                                "₩${item.price}",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFE94E5D),
+                                ),
+                              ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: Colors.amber.withOpacity(0.15),
-                                      borderRadius: BorderRadius.circular(6),
+                                      color: const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
                                       children: [
                                         const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                                        const SizedBox(width: 2),
-                                        Text(item.averageRating.toString(),
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                                color: Colors.orange)),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          item.averageRating.toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                            color: Colors.orange,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text("${item.reviewCount} reviews",
-                                      style: const TextStyle(
-                                          color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+                                  Text(
+                                    "${item.reviewCount} reviews",
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ],
                               )
                             ],
                           ),
                         ),
                         Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF3F4F6),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.chevron_right_rounded, color: Colors.black54),
+                          child: const Icon(Icons.chevron_right_rounded, color: Colors.black54, size: 20),
                         )
                       ],
                     ),
@@ -387,6 +485,7 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     );
   }
 
+  // --- REPORT STATUS BADGE ---
   Widget _buildStatusBadge(RestaurantModel restaurant) {
     Color badgeColor;
     Color textColor;
@@ -395,56 +494,55 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
 
     switch (restaurant.currentStatus) {
       case CrowdedStatus.empty:
-        badgeColor = Colors.green[100]!;
-        textColor = Colors.green[800]!;
+        badgeColor = const Color(0xFFD1FAE5);
+        textColor = const Color(0xFF065F46);
         statusText = "Line: Empty";
-        statusIcon = Icons.sentiment_very_satisfied;
+        statusIcon = Icons.sentiment_very_satisfied_rounded;
         break;
       case CrowdedStatus.moderate:
-        badgeColor = Colors.orange[100]!;
-        textColor = Colors.orange[800]!;
+        badgeColor = const Color(0xFFFEF3C7);
+        textColor = const Color(0xFF92400E);
         statusText = "Line: Moderate";
-        statusIcon = Icons.sentiment_neutral;
+        statusIcon = Icons.sentiment_neutral_rounded;
         break;
       case CrowdedStatus.busy:
-        badgeColor = Colors.red[100]!;
-        textColor = Colors.red[800]!;
+        badgeColor = const Color(0xFFFEE2E2);
+        textColor = const Color(0xFF991B1B);
         statusText = "Line: Busy";
-        statusIcon = Icons.sentiment_dissatisfied;
+        statusIcon = Icons.sentiment_dissatisfied_rounded;
         break;
       case CrowdedStatus.unknown:
-      default:
-        badgeColor = Colors.grey[200]!;
-        textColor = Colors.grey[700]!;
+        badgeColor = const Color(0xFFF3F4F6);
+        textColor = const Color(0xFF374151);
         statusText = "Line: Unknown";
-        statusIcon = Icons.help_outline;
+        statusIcon = Icons.help_outline_rounded;
         break;
     }
 
     return GestureDetector(
       onTap: () => _showReportStatusBottomSheet(restaurant),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: badgeColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: textColor.withOpacity(0.3)),
+          border: Border.all(color: textColor.withOpacity(0.15)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(statusIcon, size: 16, color: textColor),
-            const SizedBox(width: 6),
+            Icon(statusIcon, size: 14, color: textColor),
+            const SizedBox(width: 4),
             Text(
               statusText,
               style: TextStyle(
                 color: textColor,
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.edit, size: 12, color: textColor.withOpacity(0.7)),
+            Icon(Icons.edit_outlined, size: 11, color: textColor.withOpacity(0.6)),
           ],
         ),
       ),
@@ -455,7 +553,7 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (BuildContext context) {
         return Padding(
@@ -463,15 +561,21 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+              ),
+              const SizedBox(height: 20),
               Text(
                 "How is the line at ${restaurant.name}?",
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               const Text(
                 "Help other students by reporting the current status.",
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(color: Colors.grey, fontSize: 13),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -479,29 +583,29 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                 context,
                 restaurant,
                 "Empty (0-5 mins)",
-                Icons.sentiment_very_satisfied,
+                Icons.sentiment_very_satisfied_rounded,
                 Colors.green,
                 CrowdedStatus.empty,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               _buildReportOption(
                 context,
                 restaurant,
                 "Moderate (5-15 mins)",
-                Icons.sentiment_neutral,
+                Icons.sentiment_neutral_rounded,
                 Colors.orange,
                 CrowdedStatus.moderate,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               _buildReportOption(
                 context,
                 restaurant,
                 "Very Busy (15+ mins)",
-                Icons.sentiment_dissatisfied,
+                Icons.sentiment_dissatisfied_rounded,
                 Colors.red,
                 CrowdedStatus.busy,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
             ],
           ),
         );
@@ -524,28 +628,28 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
               content: const Text("Thank you for updating the line status! 👏"),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.black87,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               duration: const Duration(seconds: 2),
             ),
           );
         }
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
           border: Border.all(color: color.shade200),
-          borderRadius: BorderRadius.circular(12),
-          color: color.shade50,
+          borderRadius: BorderRadius.circular(16),
+          color: color.shade50.withOpacity(0.8),
         ),
         child: Row(
           children: [
-            Icon(icon, color: color.shade700, size: 28),
+            Icon(icon, color: color.shade700, size: 24),
             const SizedBox(width: 16),
             Text(
               label,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: color.shade900,
               ),
