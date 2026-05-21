@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'today_menu_screen.dart'; 
 import 'photo_gallery_screen.dart'; 
 import 'review_detail_screen.dart'; 
+import '../models/models.dart';
 
 class DishDetailScreen extends StatelessWidget {
-  final MenuItem dish;
+  final MenuItemModel dish;
 
   const DishDetailScreen({super.key, required this.dish});
 
@@ -48,7 +49,7 @@ class DishDetailScreen extends StatelessWidget {
                       const Icon(Icons.star_rounded, color: Colors.amber, size: 22),
                       const SizedBox(width: 4),
                       Text(
-                        dish.rating.toString(),
+                        dish.averageRating.toString(),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 8),
@@ -118,7 +119,7 @@ class DishDetailScreen extends StatelessWidget {
                     children: [
                       Column(
                         children: [
-                          Text(dish.rating.toString(), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, height: 1)),
+                          Text(dish.averageRating.toString(), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, height: 1)),
                           Row(
                             children: List.generate(5, (index) => const Icon(Icons.star_rounded, color: Colors.amber, size: 16)),
                           )
