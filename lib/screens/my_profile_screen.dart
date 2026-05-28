@@ -32,6 +32,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     final preferredTastes = user?.preferredTastes.isNotEmpty == true 
         ? user!.preferredTastes.join(", ") 
         : "None";
+    final preferredLanguage = user?.preferredLanguage ?? "English";
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -129,6 +130,16 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     ),
                     title: const Text("Home Country", style: TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(country),
+                  ),
+                  const Divider(height: 1, indent: 60),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.teal[50], shape: BoxShape.circle),
+                      child: const Icon(Icons.translate, color: Colors.teal, size: 20),
+                    ),
+                    title: const Text("Preferred Language", style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(preferredLanguage),
                   ),
                   const Divider(height: 1, indent: 60),
                   ListTile(

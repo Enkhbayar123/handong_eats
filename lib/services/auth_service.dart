@@ -60,6 +60,7 @@ class AuthService {
     required List<String> dietaryLabels,
     required List<String> allergies,
     required List<String> preferredTastes,
+    required String preferredLanguage,
   }) async {
     try {
       final uid = 'user_${DateTime.now().millisecondsSinceEpoch}';
@@ -76,6 +77,7 @@ class AuthService {
         country: country,
         spiceTolerance: spiceTolerance,
         preferredTastes: preferredTastes,
+        preferredLanguage: preferredLanguage,
       );
 
       // Save to Firestore users collection

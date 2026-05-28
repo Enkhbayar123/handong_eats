@@ -39,6 +39,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       final dietaryLabels = user?.dietaryLabels ?? [];
       final allergies = user?.allergies ?? [];
       final preferredTastes = user?.preferredTastes ?? [];
+      final preferredLanguage = user?.preferredLanguage ?? 'English';
       
       final dishName = widget.dish.name;
 
@@ -65,6 +66,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
         prompt += ' The user prefers these flavor notes: ${preferredTastes.join(", ")}. '
             'Highlight how this dish matches or fits these favorite flavor profiles.';
       }
+
+      // Instruct Gemini to write the response strictly in the preferred language
+      prompt += ' The user\'s preferred language is "$preferredLanguage". '
+          'You MUST write the entire description, food comparison, warnings, and flavor notes in "$preferredLanguage" only. '
+          'If the preferred language is Korean, output exclusively in Korean. If the preferred language is English, output exclusively in English.';
 
       // Instruct Gemini to output raw, clean, highly readable plain text paragraphs only without any markdown formatting
       prompt += ' CRITICAL FORMATTING REQUIREMENT: Do NOT use any Markdown formatting, bold symbols (like asterisks like **), bullet points (- or *), headings (#), or list symbols. Return the response as raw, clean, highly readable plain text paragraphs only. Ensure no special formatting characters appear in the output.';

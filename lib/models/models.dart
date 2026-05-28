@@ -15,6 +15,7 @@ class UserModel {
   final String country;
   final String spiceTolerance;
   final List<String> preferredTastes;
+  final String preferredLanguage;
 
   UserModel({
     required this.uid,
@@ -29,6 +30,7 @@ class UserModel {
     this.country = 'South Korea',
     this.spiceTolerance = 'Medium',
     this.preferredTastes = const [],
+    this.preferredLanguage = 'English',
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -46,6 +48,7 @@ class UserModel {
       country: data['country'] ?? 'South Korea',
       spiceTolerance: data['spiceTolerance'] ?? 'Medium',
       preferredTastes: List<String>.from(data['preferredTastes'] ?? []),
+      preferredLanguage: data['preferredLanguage'] ?? 'English',
     );
   }
 
@@ -62,6 +65,7 @@ class UserModel {
       'country': country,
       'spiceTolerance': spiceTolerance,
       'preferredTastes': preferredTastes,
+      'preferredLanguage': preferredLanguage,
     };
   }
 }

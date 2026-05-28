@@ -26,6 +26,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // Step 2 Selection
   String _selectedCountry = 'South Korea';
   String _selectedSpiceTolerance = 'Medium';
+  String _selectedLanguage = 'English';
 
   final List<Map<String, String>> _countries = [
     {'name': 'South Korea', 'flag': '🇰🇷'},
@@ -117,6 +118,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       dietaryLabels: _selectedDietary,
       allergies: _selectedAllergies,
       preferredTastes: _selectedFlavors,
+      preferredLanguage: _selectedLanguage,
     );
 
     setState(() {
@@ -454,6 +456,78 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 },
               ),
             ),
+          ),
+          const SizedBox(height: 32),
+
+          // Preferred Language Selector Cards
+          Text("PREFERRED DESCRIPTION LANGUAGE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 0.5)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedLanguage = 'English';
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _selectedLanguage == 'English' ? Colors.red[50] : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _selectedLanguage == 'English' ? Colors.redAccent : Colors.transparent,
+                        width: 2.0,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "🇬🇧 English",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: _selectedLanguage == 'English' ? Colors.red[900] : Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedLanguage = 'Korean';
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _selectedLanguage == 'Korean' ? Colors.red[50] : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _selectedLanguage == 'Korean' ? Colors.redAccent : Colors.transparent,
+                        width: 2.0,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "🇰🇷 한국어",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: _selectedLanguage == 'Korean' ? Colors.red[900] : Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 32),
 
