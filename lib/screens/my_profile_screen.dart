@@ -4,7 +4,8 @@ import 'nutrition_dashboard_screen.dart';
 import 'login_screen.dart';
 import 'dish_detail_screen.dart';
 import '../models/models.dart';
-
+import '../services/database_seeder.dart';
+import '../services/auth_service.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -16,6 +17,24 @@ class MyProfileScreen extends StatefulWidget {
 class _MyProfileScreenState extends State<MyProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    // Get the dynamic user from AuthService
+    final user = AuthService.currentUser;
+    final name = user?.name ?? "Jack (Enkhbayar)";
+    final studentId = user?.studentId ?? "22000123";
+    final country = user?.country ?? "Mongolia";
+    final spiceTolerance = user?.spiceTolerance ?? "Hot";
+    final dietaryLabels = user?.dietaryLabels.isNotEmpty == true 
+        ? user!.dietaryLabels.join(", ") 
+        : "None";
+    final allergies = user?.allergies.isNotEmpty == true 
+        ? user!.allergies.join(", ") 
+        : "None";
+    final preferredTastes = user?.preferredTastes.isNotEmpty == true 
+        ? user!.preferredTastes.join(", ") 
+        : "None";
+
+    final activeUserId = AuthService.currentUser?.uid ?? 'user_1';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
@@ -28,7 +47,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         elevation: 0,
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc('user_1').snapshots(),
+        stream: FirebaseFirestore.instance.collection('users').doc(activeUserId).snapshots(),
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -47,7 +66,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('meal_logs')
-                .where('userId', isEqualTo: 'user_1')
+                .where('userId', isEqualTo: activeUserId)
                 .snapshots(),
             builder: (context, logsSnapshot) {
               final logCount = logsSnapshot.data?.docs.length ?? 0;
@@ -55,7 +74,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('reviews')
-                    .where('userId', isEqualTo: 'user_1')
+                    .where('userId', isEqualTo: activeUserId)
                     .snapshots(),
                 builder: (context, reviewsSnapshot) {
                   final reviewCount = reviewsSnapshot.data?.docs.length ?? 0;
@@ -197,6 +216,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 ],
               ),
             ),
+
           ],
         ),
       ),
@@ -367,6 +387,75 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             leading: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
+                color: Colors.blue[50],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.flag,
+                color: Colors.blueAccent,
+                size: 20,
+              ),
+            ),
+            title: const Text(
+              "Home Country",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            subtitle: Text(
+              user.country,
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ),
+          const Divider(height: 1, indent: 60),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.whatshot,
+                color: Colors.redAccent,
+                size: 20,
+              ),
+            ),
+            title: const Text(
+              "Spice Tolerance",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            subtitle: Text(
+              user.spiceTolerance,
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ),
+          const Divider(height: 1, indent: 60),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.purple[50],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.favorite_border,
+                color: Colors.purpleAccent,
+                size: 20,
+              ),
+            ),
+            title: const Text(
+              "Preferred Flavors",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            subtitle: Text(
+              user.preferredTastes.isNotEmpty ? user.preferredTastes.join(", ") : "None",
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ),
+          const Divider(height: 1, indent: 60),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
                 color: Colors.green[50],
                 shape: BoxShape.circle,
               ),
@@ -530,9 +619,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             value: user.pushNotificationsEnabled,
             activeColor: const Color(0xFFE94E5D),
             onChanged: (bool value) async {
+              final activeUserId = AuthService.currentUser?.uid ?? 'user_1';
               await FirebaseFirestore.instance
                   .collection('users')
-                  .doc('user_1')
+                  .doc(activeUserId)
                   .set({'pushNotificationsEnabled': value}, SetOptions(merge: true));
             },
           ),
@@ -560,6 +650,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             ),
             onTap: () {
+              AuthService.logout();
               // Reset navigation back to the login screen and clean up stack
               Navigator.pushAndRemoveUntil(
                 context,

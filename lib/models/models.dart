@@ -12,6 +12,9 @@ class UserModel {
   final List<String> allergies;
   final bool pushNotificationsEnabled;
   final List<String> favoriteMenuIds;
+  final String country;
+  final String spiceTolerance;
+  final List<String> preferredTastes;
 
   UserModel({
     required this.uid,
@@ -23,6 +26,9 @@ class UserModel {
     required this.allergies,
     required this.pushNotificationsEnabled,
     required this.favoriteMenuIds,
+    this.country = 'South Korea',
+    this.spiceTolerance = 'Medium',
+    this.preferredTastes = const [],
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -37,6 +43,9 @@ class UserModel {
       allergies: List<String>.from(data['allergies'] ?? []),
       pushNotificationsEnabled: data['pushNotificationsEnabled'] ?? false,
       favoriteMenuIds: List<String>.from(data['favoriteMenuIds'] ?? []),
+      country: data['country'] ?? 'South Korea',
+      spiceTolerance: data['spiceTolerance'] ?? 'Medium',
+      preferredTastes: List<String>.from(data['preferredTastes'] ?? []),
     );
   }
 
@@ -50,6 +59,9 @@ class UserModel {
       'allergies': allergies,
       'pushNotificationsEnabled': pushNotificationsEnabled,
       'favoriteMenuIds': favoriteMenuIds,
+      'country': country,
+      'spiceTolerance': spiceTolerance,
+      'preferredTastes': preferredTastes,
     };
   }
 }

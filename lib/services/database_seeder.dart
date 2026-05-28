@@ -17,6 +17,9 @@ class DatabaseSeeder {
         allergies: ['Peanuts'],
         pushNotificationsEnabled: true,
         favoriteMenuIds: ['rest_1_m2', 'rest_8_m3'],
+        country: 'South Korea',
+        spiceTolerance: 'Hot',
+        preferredTastes: ['Spicy', 'Savory'],
       ),
       UserModel(
         uid: 'user_2',
@@ -28,6 +31,9 @@ class DatabaseSeeder {
         allergies: [],
         pushNotificationsEnabled: false,
         favoriteMenuIds: ['rest_5_m1', 'rest_3_m1'],
+        country: 'United States',
+        spiceTolerance: 'Mild',
+        preferredTastes: ['Sweet', 'Savory'],
       ),
     ];
     for (var user in users) {
