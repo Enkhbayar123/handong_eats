@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
-import 'screens/login_screen.dart'; // <--- Import the login screen instead
+import 'screens/login_screen.dart';
+import 'services/database_seeder.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Auto-seed if database is empty to guarantee a working first-launch experience
+  try {
+    final rests = await FirebaseFirestore.instance.collection('restaurants').limit(1).get();
+    if (rests.docs.isEmpty) {
+      await DatabaseSeeder.runAllSeeds();
+    }
+  } catch (e) {
+    debugPrint("Auto-seeding check skipped/failed: $e");
+  }
+
   runApp(const HandongEatsApp());
 }
 

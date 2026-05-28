@@ -54,6 +54,15 @@ class DefaultFirebaseOptions {
     storageBucket: 'handong-eats-61f3d.firebasestorage.app',
   );
 
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAmJbih66Gzu-Eufl0YGrctbXkAE4XAwYQ',
+    appId: '1:457484292778:ios:370976992d30cbb9c0f6d3',
+    messagingSenderId: '457484292778',
+    projectId: 'handong-eats-61f3d',
+    storageBucket: 'handong-eats-61f3d.firebasestorage.app',
+    iosBundleId: 'com.example.handongEats',
+  );
+
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyB2-1BuDl1amDme42sjZoSNGd_I9pesWw8',
     appId: '1:457484292778:web:fc79f706d3af330dc0f6d3',
@@ -62,14 +71,5 @@ class DefaultFirebaseOptions {
     authDomain: 'handong-eats-61f3d.firebaseapp.com',
     storageBucket: 'handong-eats-61f3d.firebasestorage.app',
     measurementId: 'G-EKWMD8N1HL',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAmJbih66Gzu-Eufl0YGrctbXkAE4XAwYQ',
-    appId: '1:457484292778:ios:370976992d30cbb9c0f6d3',
-    messagingSenderId: '457484292778',
-    projectId: 'handong-eats-61f3d',
-    storageBucket: 'handong-eats-61f3d.firebasestorage.app',
-    iosBundleId: 'com.example.handongEats',
   );
 }

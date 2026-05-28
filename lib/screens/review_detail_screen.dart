@@ -39,6 +39,10 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
             Image.network(
               widget.backgroundImageUrl!,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey[900],
+                child: const Icon(Icons.broken_image, color: Colors.white24, size: 50),
+              ),
             )
           else
             Container(color: Colors.grey[900]), // Dark background if no photo
