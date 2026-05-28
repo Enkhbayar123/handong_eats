@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'main_navigation.dart'; // Import this so we can route into the app!
+import '../services/auth_service.dart';
+import 'main_navigation.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,14 +11,84 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Toggles password visibility
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSignIn() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter your campus email"),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await AuthService.login(email);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Welcome back, ${AuthService.currentUser?.name}!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigation()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Account not found for $email.\nHint: Use 'student1@handong.ac.kr' or Sign Up!",
+              textAlign: TextAlign.center,
+            ),
+            duration: const Duration(seconds: 4),
+            backgroundColor: Colors.redAccent,
+            action: SnackBarAction(
+              label: "SIGN UP",
+              textColor: Colors.white,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // SafeArea prevents the UI from overlapping with the phone's status bar or notch
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -51,14 +123,16 @@ class _LoginScreenState extends State<LoginScreen> {
               Text("CAMPUS EMAIL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 0.5)),
               const SizedBox(height: 8),
               TextField(
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  hintText: "student@university.edu",
+                  hintText: "student1@handong.ac.kr",
                   hintStyle: TextStyle(color: Colors.grey[400]),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.all(20),
+                  prefixIcon: const Icon(Icons.email_outlined, size: 20),
                 ),
               ),
               const SizedBox(height: 24),
@@ -66,6 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text("PASSWORD", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 0.5)),
               const SizedBox(height: 8),
               TextField(
+                controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: "••••••••",
@@ -74,6 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.all(20),
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   // Password visibility toggle
                   suffixIcon: IconButton(
                     icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
@@ -101,21 +177,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // pushReplacement removes the login screen from the history stack
-                    // This way, if they hit the "Back" button on their phone, they don't accidentally log out!
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MainNavigation()),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleSignIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: const Text("Sign In", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Sign In", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 40),
@@ -168,7 +239,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text("Don't have an account?", style: TextStyle(color: Colors.grey[600], fontSize: 15)),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                      );
+                    },
                     child: const Text("Sign Up", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
                 ],

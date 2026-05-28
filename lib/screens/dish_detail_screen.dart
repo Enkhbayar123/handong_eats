@@ -1,13 +1,115 @@
 import 'package:flutter/material.dart';
-import 'today_menu_screen.dart'; 
+import 'package:google_generative_ai/google_generative_ai.dart'; // Import for Gemini API
 import 'photo_gallery_screen.dart'; 
 import 'review_detail_screen.dart'; 
 import '../models/models.dart';
+import '../services/auth_service.dart';
 
-class DishDetailScreen extends StatelessWidget {
+class DishDetailScreen extends StatefulWidget {
   final MenuItemModel dish;
 
   const DishDetailScreen({super.key, required this.dish});
+
+  @override
+  State<DishDetailScreen> createState() => _DishDetailScreenState();
+}
+
+class _DishDetailScreenState extends State<DishDetailScreen> {
+  bool _isLoading = false;
+  String? _aiDescription;
+
+  Future<void> _generateAIDescription() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Secure API Key: allows overriding using --dart-define=GEMINI_API_KEY=YOUR_KEY
+      const apiKey = String.fromEnvironment(
+        'GEMINI_API_KEY',
+        defaultValue: 'AIzaSyDSiGXcpR7jAhIU8OUyeX67dob19Z99RmY',
+      );
+      
+      // Using gemini-flash-latest for rapid text generations
+      final model = GenerativeModel(model: 'gemini-flash-latest', apiKey: apiKey);
+
+      final user = AuthService.currentUser;
+      final userCountry = user?.country ?? 'South Korea';
+      final spiceTolerance = user?.spiceTolerance ?? 'Medium';
+      final dietaryLabels = user?.dietaryLabels ?? [];
+      final allergies = user?.allergies ?? [];
+      final preferredTastes = user?.preferredTastes ?? [];
+      
+      final dishName = widget.dish.name;
+
+      // Prompt template explicitly handling country-specific food matching
+      var prompt = 'Provide a short, highly appetizing description for a dish named "$dishName". '
+          'Additionally, since the user is from $userCountry, recommend a similar food or equivalent option '
+          'that exists in $userCountry cuisine to help them understand what it tastes like.';
+
+      // Add spice tolerance custom logic
+      prompt += ' The user has a spice tolerance of "$spiceTolerance". '
+          'Identify if the dish is spicy. If it is spicier than their tolerance, warn them clearly; '
+          'otherwise, let them know it fits their spice preference.';
+
+      // Add allergy/dietary custom logic
+      if (dietaryLabels.isNotEmpty || allergies.isNotEmpty) {
+        prompt += ' IMPORTANT: The user has the following dietary guidelines: '
+            'Dietary labels: ${dietaryLabels.join(", ")}, Allergies: ${allergies.join(", ")}. '
+            'If the dish "$dishName" violates these (e.g., contains peanuts if they are allergic, or is non-halal if they require halal), '
+            'prominently place a clear caution/warning at the very beginning of the response. Otherwise, note that it conforms to their restrictions.';
+      }
+
+      // Add flavor preference custom logic
+      if (preferredTastes.isNotEmpty) {
+        prompt += ' The user prefers these flavor notes: ${preferredTastes.join(", ")}. '
+            'Highlight how this dish matches or fits these favorite flavor profiles.';
+      }
+
+      // Instruct Gemini to output raw, clean, highly readable plain text paragraphs only without any markdown formatting
+      prompt += ' CRITICAL FORMATTING REQUIREMENT: Do NOT use any Markdown formatting, bold symbols (like asterisks like **), bullet points (- or *), headings (#), or list symbols. Return the response as raw, clean, highly readable plain text paragraphs only. Ensure no special formatting characters appear in the output.';
+      
+      final response = await model.generateContent([Content.text(prompt)]);
+
+      // Double-layered protection: strip any stray markdown formatting characters
+      String? cleanText = response.text;
+      if (cleanText != null) {
+        cleanText = cleanText
+            .replaceAll(RegExp(r'\*\*'), '') // Remove bold marks
+            .replaceAll(RegExp(r'\*'), '')   // Remove italic marks
+            .replaceAll(RegExp(r'###? '), '') // Remove headings
+            .replaceAll(RegExp(r'`'), '')     // Remove code backticks
+            .replaceAll(RegExp(r'^\s*-\s+', multiLine: true), '') // Remove leading list dashes
+            .trim();
+      }
+
+      setState(() {
+        _aiDescription = cleanText;
+      });
+    } catch (e) {
+      debugPrint('Gemini API Error: $e');
+      final errorStr = e.toString();
+      setState(() {
+        if (errorStr.contains('API key expired')) {
+          _aiDescription = 'Failed to generate AI description because the API key is expired.\n\n'
+              'To fix this, please run your app with a valid key:\n'
+              'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY\n\n'
+              'Or replace the expired apiKey variable in dish_detail_screen.dart.';
+        } else if (errorStr.contains('blocked') || errorStr.contains('API key not valid')) {
+          _aiDescription = 'Failed to generate AI description because the API key is restricted or invalid.\n\n'
+              'Please verify that your Google AI Studio API key has permission for the Generative Language API, '
+              'or run with a valid key:\n'
+              'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY';
+        } else {
+          _aiDescription = 'Failed to generate smart description. Please try again.\nError: $e';
+        }
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +125,7 @@ class DishDetailScreen extends StatelessWidget {
             foregroundColor: Colors.black,
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                dish.imageUrl,
+                widget.dish.imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => 
                   Container(color: Colors.grey[200], child: const Icon(Icons.fastfood, size: 50, color: Colors.grey)),
@@ -40,7 +142,7 @@ class DishDetailScreen extends StatelessWidget {
                 children: [
                   // 1. Title and Basic Info
                   Text(
-                    dish.name,
+                    widget.dish.name,
                     style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),
@@ -49,12 +151,12 @@ class DishDetailScreen extends StatelessWidget {
                       const Icon(Icons.star_rounded, color: Colors.amber, size: 22),
                       const SizedBox(width: 4),
                       Text(
-                        dish.averageRating.toString(),
+                        widget.dish.averageRating.toString(),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        "${dish.reviewCount} Reviews",
+                        "${widget.dish.reviewCount} Reviews",
                         style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -83,10 +185,37 @@ class DishDetailScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          "A savory soy-based stir-fry with sweet potato glass noodles, colorful vegetables, and toasted sesame.",
-                          style: TextStyle(fontSize: 15, height: 1.4, color: Colors.black87),
-                        ),
+                        
+                        // Handles conditional visibility states seamlessly
+                        if (_isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12.0),
+                              child: CircularProgressIndicator(color: Colors.purple),
+                            ),
+                          )
+                        else if (_aiDescription != null)
+                          Text(
+                            _aiDescription!,
+                            style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87),
+                          )
+                        else
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: ElevatedButton.icon(
+                                onPressed: _generateAIDescription,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple[400],
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  elevation: 0,
+                                ),
+                                icon: const Icon(Icons.auto_awesome, size: 18),
+                                label: const Text("Generate AI Description", style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -119,7 +248,7 @@ class DishDetailScreen extends StatelessWidget {
                     children: [
                       Column(
                         children: [
-                          Text(dish.averageRating.toString(), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, height: 1)),
+                          Text(widget.dish.averageRating.toString(), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, height: 1)),
                           Row(
                             children: List.generate(5, (index) => const Icon(Icons.star_rounded, color: Colors.amber, size: 16)),
                           )
@@ -151,7 +280,7 @@ class DishDetailScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => PhotoGalleryScreen(dish: dish),
+                              builder: (context) => PhotoGalleryScreen(dish: widget.dish),
                             ),
                           );
                         },

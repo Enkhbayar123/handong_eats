@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'nutrition_dashboard_screen.dart';
 import '../services/database_seeder.dart';
+import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -15,6 +17,22 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the dynamic user from AuthService
+    final user = AuthService.currentUser;
+    final name = user?.name ?? "Jack (Enkhbayar)";
+    final studentId = user?.studentId ?? "22000123";
+    final country = user?.country ?? "Mongolia";
+    final spiceTolerance = user?.spiceTolerance ?? "Hot";
+    final dietaryLabels = user?.dietaryLabels.isNotEmpty == true 
+        ? user!.dietaryLabels.join(", ") 
+        : "None";
+    final allergies = user?.allergies.isNotEmpty == true 
+        ? user!.allergies.join(", ") 
+        : "None";
+    final preferredTastes = user?.preferredTastes.isNotEmpty == true 
+        ? user!.preferredTastes.join(", ") 
+        : "None";
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -41,17 +59,19 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         backgroundImage: const NetworkImage("https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80"),
                       ),
                       const SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Jack (Enkhbayar)", 
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
-                          ),
-                          const SizedBox(height: 4),
-                          Text("Student ID: 22000123", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                          Text("Handong Eats Member since 2023", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name, 
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+                            ),
+                            const SizedBox(height: 4),
+                            Text("Student ID: $studentId", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                            Text("Handong Eats Member since 2023", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                          ],
+                        ),
                       )
                     ],
                   ),
@@ -96,7 +116,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             const SizedBox(height: 16),
 
             // --- 3. Dining Preferences ---
-            _buildSectionHeader("Dining Preferences"),
+            _buildSectionHeader("Dining & Food Profile"),
             Container(
               color: Colors.white,
               child: Column(
@@ -104,13 +124,31 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+                      child: const Icon(Icons.flag, color: Colors.blueAccent, size: 20),
+                    ),
+                    title: const Text("Home Country", style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(country),
+                  ),
+                  const Divider(height: 1, indent: 60),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.red[50], shape: BoxShape.circle),
+                      child: const Icon(Icons.whatshot, color: Colors.redAccent, size: 20),
+                    ),
+                    title: const Text("Spice Tolerance", style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(spiceTolerance),
+                  ),
+                  const Divider(height: 1, indent: 60),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(color: Colors.green[50], shape: BoxShape.circle),
                       child: Icon(Icons.eco, color: Colors.green[600], size: 20),
                     ),
-                    title: const Text("Dietary Label", style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: const Text("Vegetarian, Gluten-Free"),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                    onTap: () {}, // Future: Open preferences editor
+                    title: const Text("Dietary Labels", style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(dietaryLabels),
                   ),
                   const Divider(height: 1, indent: 60),
                   ListTile(
@@ -120,9 +158,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       child: Icon(Icons.warning_amber_rounded, color: Colors.orange[600], size: 20),
                     ),
                     title: const Text("Allergies", style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: const Text("Peanuts, Shellfish"),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                    onTap: () {},
+                    subtitle: Text(allergies),
+                  ),
+                  const Divider(height: 1, indent: 60),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.purple[50], shape: BoxShape.circle),
+                      child: Icon(Icons.favorite_border, color: Colors.purple[600], size: 20),
+                    ),
+                    title: const Text("Preferred Flavors", style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(preferredTastes),
                   ),
                 ],
               ),
@@ -202,8 +248,11 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     ),
                     title: Text("Logout", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red[600])),
                     onTap: () {
-                      print("User logged out!");
-                      // Future: Navigate back to login screen
+                      AuthService.logout();
+                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
                     },
                   ),
                 ],
