@@ -25,6 +25,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     super.initState();
     _averageRating = widget.dish.averageRating.toDouble();
     _reviewCount = widget.dish.reviewCount;
+    _generateAIDescription();
   }
 
   bool _isLoading = false;
@@ -123,6 +124,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
     final userId = AuthService.currentUser?.uid ?? 'user_1';
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
@@ -161,8 +164,6 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                             errorBuilder: (context, error, stackTrace) => Container(
                               color: Colors.grey[200],
                               child: const Icon(Icons.fastfood, size: 50, color: Colors.grey),
-                            ),
-                          ),
                             ),
                           ),
                           // Subtle overlay at the top for back/heart buttons
@@ -290,17 +291,35 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 10),
-                                Text(
-                                  widget.dish.description.isNotEmpty
-                                      ? widget.dish.description
-                                      : "A savory, freshly-prepared selection crafted with healthy and seasonal ingredients.",
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    height: 1.5,
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
+                                if (_isLoading)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 12.0),
+                                      child: CircularProgressIndicator(color: Color(0xFF6B4EFF)),
+                                    ),
+                                  )
+                                else if (_aiDescription != null)
+                                  Text(
+                                    _aiDescription!,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      height: 1.5,
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  )
+                                else
+                                  Text(
+                                    widget.dish.description.isNotEmpty
+                                        ? widget.dish.description
+                                        : "A savory, freshly-prepared selection crafted with healthy and seasonal ingredients.",
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      height: 1.5,
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
