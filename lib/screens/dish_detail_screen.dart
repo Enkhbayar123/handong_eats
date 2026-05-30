@@ -41,10 +41,15 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
     try {
       // Secure API Key loaded dynamically from .env to prevent leakage on GitHub
-      final apiKey = (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ?? const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-      
+      final apiKey =
+          (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ??
+          const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
       // Using gemini-flash-latest for rapid text generations
-      final model = GenerativeModel(model: 'gemini-flash-latest', apiKey: apiKey);
+      final model = GenerativeModel(
+        model: 'gemini-flash-latest',
+        apiKey: apiKey,
+      );
 
       final user = AuthService.currentUser;
       final userCountry = user?.country ?? 'South Korea';
@@ -53,36 +58,25 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       final allergies = user?.allergies ?? [];
       final preferredTastes = user?.preferredTastes ?? [];
       final preferredLanguage = user?.preferredLanguage ?? 'English';
-      
+
       final dishName = widget.dish.name;
 
-      // Prompt template focused on objective, basic information in Korean
-      var prompt = '당신은 대학교 학생식당 메뉴를 설명해주는 정보 도우미입니다. '
-          '"$dishName"이라는 음식에 대해 사람들이 검색했을 때 나오는 객관적이고 기본적인 정보를 짧고 명확하게 설명해주세요. '
-          '주의: "우리 셰프가 정성껏 만든", "저희 레스토랑의" 같은 거창한 식당 홍보 멘트나 수식어는 절대 쓰지 마세요. '
-          '모든 답변은 반드시 자연스러운 한국어(Korean)로만 작성하세요.';
+      // Prompt: dry, factual, no fluff
+      var prompt =
+          '"$dishName" 음식에 대해 2~3문장으로 설명해줘. '
+          '백과사전이나 네이버 검색 결과처럼 건조하고 사실적으로만 써. '
+          '절대 맛있다, 풍미가 일품이다, 입안에서 녹는다 같은 오글거리는 표현 쓰지 마. '
+          '그냥 어떤 재료로 만들고 어떤 종류의 음식인지만 알려줘. 한국어로 써.';
 
-      // Add spice tolerance custom logic
-      prompt += ' 사용자의 매운맛 선호도는 "$spiceTolerance"입니다. '
-          '이 음식이 매운 편인지 객관적으로 알려주고, 사용자의 선호도에 맞을지 짧게 언급해주세요.';
-
-      // Add allergy/dietary custom logic
-      if (dietaryLabels.isNotEmpty || allergies.isNotEmpty) {
-        prompt += ' 중요: 사용자는 다음의 식단/알레르기 정보가 있습니다: '
-            '식단: ${dietaryLabels.join(", ")}, 알레르기: ${allergies.join(", ")}. '
-            '만약 "$dishName"에 이와 충돌하는 성분(예: 땅콩 알레르기가 있는데 땅콩이 들어감 등)이 포함될 가능성이 있다면 가장 먼저 강력하게 경고해주세요. '
-            '문제가 없다면 안전하다고 알려주세요.';
+      // Allergy warning only
+      if (allergies.isNotEmpty) {
+        prompt +=
+            ' 알레르기 주의: 사용자가 ${allergies.join(", ")}에 알레르기가 있음. 해당 성분이 포함될 수 있으면 맨 앞에 경고해줘.';
       }
 
-      // Add flavor preference custom logic
-      if (preferredTastes.isNotEmpty) {
-        prompt += ' 사용자가 선호하는 맛: ${preferredTastes.join(", ")}. '
-            '이 음식이 사용자가 선호하는 맛과 어떻게 잘 맞는지 객관적으로 짧게 설명해주세요.';
-      }
+      // Plain text only
+      prompt += ' 마크다운 기호 쓰지 마.';
 
-      // Instruct Gemini to output raw, clean, highly readable plain text paragraphs only without any markdown formatting
-      prompt += ' 텍스트 포맷 규칙: 마크다운 기호(*, **, #, - 등)를 절대 사용하지 마세요. 기호 없이 깔끔하고 읽기 편한 순수 텍스트(Plain text) 줄글로만 답변을 제공하세요.';
-      
       final response = await model.generateContent([Content.text(prompt)]);
 
       // Double-layered protection: strip any stray markdown formatting characters
@@ -90,10 +84,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       if (cleanText != null) {
         cleanText = cleanText
             .replaceAll(RegExp(r'\*\*'), '') // Remove bold marks
-            .replaceAll(RegExp(r'\*'), '')   // Remove italic marks
+            .replaceAll(RegExp(r'\*'), '') // Remove italic marks
             .replaceAll(RegExp(r'###? '), '') // Remove headings
-            .replaceAll(RegExp(r'`'), '')     // Remove code backticks
-            .replaceAll(RegExp(r'^\s*-\s+', multiLine: true), '') // Remove leading list dashes
+            .replaceAll(RegExp(r'`'), '') // Remove code backticks
+            .replaceAll(
+              RegExp(r'^\s*-\s+', multiLine: true),
+              '',
+            ) // Remove leading list dashes
             .trim();
       }
 
@@ -108,17 +105,21 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       if (mounted) {
         setState(() {
           if (errorStr.contains('API key expired')) {
-            _aiDescription = 'Failed to generate AI description because the API key is expired.\n\n'
+            _aiDescription =
+                'Failed to generate AI description because the API key is expired.\n\n'
                 'To fix this, please run your app with a valid key:\n'
                 'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY\n\n'
                 'Or replace the expired apiKey variable in dish_detail_screen.dart.';
-          } else if (errorStr.contains('blocked') || errorStr.contains('API key not valid')) {
-            _aiDescription = 'Failed to generate AI description because the API key is restricted or invalid.\n\n'
+          } else if (errorStr.contains('blocked') ||
+              errorStr.contains('API key not valid')) {
+            _aiDescription =
+                'Failed to generate AI description because the API key is restricted or invalid.\n\n'
                 'Please verify that your Google AI Studio API key has permission for the Generative Language API, '
                 'or run with a valid key:\n'
                 'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY';
           } else {
-            _aiDescription = 'Failed to generate smart description. Please try again.\nError: $e';
+            _aiDescription =
+                'Failed to generate smart description. Please try again.\nError: $e';
           }
         });
       }
@@ -135,19 +136,30 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
   Widget build(BuildContext context) {
     final userId = AuthService.currentUser?.uid ?? 'user_1';
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
       builder: (context, userSnapshot) {
-        final userData = userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
-        final favoriteMenuIds = List<String>.from(userData['favoriteMenuIds'] ?? []);
+        final userData =
+            userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
+        final favoriteMenuIds = List<String>.from(
+          userData['favoriteMenuIds'] ?? [],
+        );
         final isFavorited = favoriteMenuIds.contains(widget.dish.id);
 
         return Scaffold(
           backgroundColor: Colors.white,
           body: StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance.collection('menu_items').doc(widget.dish.id).snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('menu_items')
+                .doc(widget.dish.id)
+                .snapshots(),
             builder: (context, dishSnapshot) {
               if (dishSnapshot.hasData && dishSnapshot.data!.exists) {
-                final freshDish = MenuItemModel.fromFirestore(dishSnapshot.data!);
+                final freshDish = MenuItemModel.fromFirestore(
+                  dishSnapshot.data!,
+                );
                 _averageRating = freshDish.averageRating.toDouble();
                 _reviewCount = freshDish.reviewCount;
               }
@@ -168,10 +180,15 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           Image.network(
                             widget.dish.imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.fastfood, size: 50, color: Colors.grey),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.fastfood,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                           ),
                           // Subtle overlay at the top for back/heart buttons
                           Container(
@@ -198,16 +215,22 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                         ),
                         child: IconButton(
                           icon: Icon(
-                            isFavorited ? Icons.favorite : Icons.favorite_border_rounded,
-                            color: isFavorited ? const Color(0xFFE94E5D) : Colors.black87,
+                            isFavorited
+                                ? Icons.favorite
+                                : Icons.favorite_border_rounded,
+                            color: isFavorited
+                                ? const Color(0xFFE94E5D)
+                                : Colors.black87,
                             size: 24,
                           ),
                           onPressed: () async {
-                            final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+                            final userRef = FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(userId);
                             await userRef.set({
                               'favoriteMenuIds': isFavorited
                                   ? FieldValue.arrayRemove([widget.dish.id])
-                                  : FieldValue.arrayUnion([widget.dish.id])
+                                  : FieldValue.arrayUnion([widget.dish.id]),
                             }, SetOptions(merge: true));
                           },
                         ),
@@ -235,11 +258,18 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           const SizedBox(height: 10),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 24,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 _averageRating.toStringAsFixed(1),
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -272,22 +302,34 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [const Color(0xFF6B4EFF).withOpacity(0.06), const Color(0xFF8B5CF6).withOpacity(0.06)],
+                                colors: [
+                                  const Color(0xFF6B4EFF).withOpacity(0.06),
+                                  const Color(0xFF8B5CF6).withOpacity(0.06),
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: const Color(0xFF6B4EFF).withOpacity(0.12)),
+                              border: Border.all(
+                                color: const Color(
+                                  0xFF6B4EFF,
+                                ).withOpacity(0.12),
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
-                                        Icon(Icons.auto_awesome, color: const Color(0xFF6B4EFF), size: 18),
+                                        Icon(
+                                          Icons.auto_awesome,
+                                          color: const Color(0xFF6B4EFF),
+                                          size: 18,
+                                        ),
                                         const SizedBox(width: 8),
                                         const Text(
                                           "SMART MENU DESCRIPTION",
@@ -301,15 +343,23 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                       ],
                                     ),
                                     if (_aiDescription != null)
-                                      Icon(Icons.check_circle_rounded, color: Colors.green[600], size: 16),
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        color: Colors.green[600],
+                                        size: 16,
+                                      ),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
                                 if (_isLoading)
                                   const Center(
                                     child: Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 12.0),
-                                      child: CircularProgressIndicator(color: Color(0xFF6B4EFF)),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12.0,
+                                      ),
+                                      child: CircularProgressIndicator(
+                                        color: Color(0xFF6B4EFF),
+                                      ),
                                     ),
                                   )
                                 else if (_aiDescription != null)
@@ -324,7 +374,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                   )
                                 else
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         widget.dish.description.isNotEmpty
@@ -344,14 +395,20 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                         child: ElevatedButton.icon(
                                           onPressed: _generateAIDescription,
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFF6B4EFF),
+                                            backgroundColor: const Color(
+                                              0xFF6B4EFF,
+                                            ),
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
                                             elevation: 0,
                                           ),
-                                          icon: const Icon(Icons.auto_awesome, size: 18),
+                                          icon: const Icon(
+                                            Icons.auto_awesome,
+                                            size: 18,
+                                          ),
                                           label: const Text(
                                             "Generate AI Custom Insights",
                                             style: TextStyle(
@@ -373,22 +430,41 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton.icon(
-                              onPressed: () => showAddReviewBottomSheet(context, widget.dish),
+                              onPressed: () => showAddReviewBottomSheet(
+                                context,
+                                widget.dish,
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFE94E5D),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                                 elevation: 4,
-                                shadowColor: const Color(0xFFE94E5D).withOpacity(0.3),
+                                shadowColor: const Color(
+                                  0xFFE94E5D,
+                                ).withOpacity(0.3),
                               ),
                               icon: const Icon(Icons.edit_note_rounded),
-                              label: Text(LocalizationService.tr('write_review'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              label: Text(
+                                LocalizationService.tr('write_review'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 32),
 
                           // 5. Reviews Summary (Live calculations)
-                          const Text("Reviews Summary", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Reviews Summary",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           _buildLiveReviewsSummarySection(),
                           const SizedBox(height: 32),
@@ -399,14 +475,18 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                             children: [
                               Text(
                                 LocalizationService.tr('dish_reviews'),
-                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => PhotoGalleryScreen(dish: widget.dish),
+                                      builder: (context) =>
+                                          PhotoGalleryScreen(dish: widget.dish),
                                     ),
                                   );
                                 },
@@ -426,7 +506,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                         ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               );
             },
@@ -461,12 +541,20 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       children: [
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.black87),
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.grey[500],
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -502,7 +590,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
               children: [
                 Text(
                   _averageRating.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, height: 1),
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -510,7 +602,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                     5,
                     (index) => Icon(
                       Icons.star_rounded,
-                      color: index < _averageRating.round() ? Colors.amber : Colors.grey[300],
+                      color: index < _averageRating.round()
+                          ? Colors.amber
+                          : Colors.grey[300],
                       size: 16,
                     ),
                   ),
@@ -518,7 +612,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                 const SizedBox(height: 4),
                 Text(
                   "$total Reviews",
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -532,7 +630,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                   return _buildRatingBar(star.toString(), pct);
                 }),
               ),
-            )
+            ),
           ],
         );
       },
@@ -544,7 +642,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         children: [
-          Text(star, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(
+            star,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: LinearProgressIndicator(
@@ -560,9 +664,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             width: 40,
             child: Text(
               "${(percentage * 100).toInt()}%",
-              style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -586,13 +694,19 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             child: Center(
               child: Text(
                 "No reviews yet. Be the first to share your thoughts!",
-                style: TextStyle(color: Colors.grey[400], fontSize: 15, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           );
         }
 
-        final reviews = snapshot.data!.docs.map((doc) => ReviewModel.fromFirestore(doc)).toList();
+        final reviews = snapshot.data!.docs
+            .map((doc) => ReviewModel.fromFirestore(doc))
+            .toList();
 
         return ListView.builder(
           shrinkWrap: true,
@@ -602,14 +716,19 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             final review = reviews[index];
 
             return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance.collection('users').doc(review.userId).get(),
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(review.userId)
+                  .get(),
               builder: (context, userSnap) {
                 String name = "Alex Chan";
-                String userImage = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=200&q=80";
+                String userImage =
+                    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=200&q=80";
                 int userReviewCount = 0;
 
                 if (userSnap.hasData && userSnap.data!.exists) {
-                  final data = userSnap.data!.data() as Map<String, dynamic>? ?? {};
+                  final data =
+                      userSnap.data!.data() as Map<String, dynamic>? ?? {};
                   name = data['name'] ?? name;
                   userImage = data['profileImageUrl'] ?? userImage;
                   userReviewCount = data['reviewCount'] ?? 0;
@@ -639,7 +758,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           originalReview: review.originalReview,
                           translatedReview: review.translatedReview,
                           userReviewCount: userReviewCount,
-                          backgroundImageUrl: review.backgroundImageUrl.isNotEmpty
+                          backgroundImageUrl:
+                              review.backgroundImageUrl.isNotEmpty
                               ? review.backgroundImageUrl
                               : "https://images.unsplash.com/photo-1552611052-33e04de081de?w=800&q=80",
                         ),
@@ -670,13 +790,22 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                          Text(
+                                            name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
                                           const SizedBox(width: 8),
-                                          TierBadge(reviewCount: userReviewCount),
+                                          TierBadge(
+                                            reviewCount: userReviewCount,
+                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 4),
@@ -685,7 +814,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                           5,
                                           (idx) => Icon(
                                             Icons.star_rounded,
-                                            color: idx < review.rating ? Colors.amber : Colors.grey[300],
+                                            color: idx < review.rating
+                                                ? Colors.amber
+                                                : Colors.grey[300],
                                             size: 14,
                                           ),
                                         ),
@@ -694,7 +825,14 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                   ),
                                 ],
                               ),
-                              Text(dateStr, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
+                              Text(
+                                dateStr,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -704,7 +842,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                               Expanded(
                                 child: Text(
                                   review.originalReview,
-                                  style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.4,
+                                    color: Colors.black87,
+                                  ),
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -718,12 +860,18 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                     width: 60,
                                     height: 60,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      width: 60,
-                                      height: 60,
-                                      color: Colors.grey[200],
-                                      child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
-                                    ),
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: Colors.grey[200],
+                                              child: const Icon(
+                                                Icons.broken_image,
+                                                color: Colors.grey,
+                                                size: 20,
+                                              ),
+                                            ),
                                   ),
                                 ),
                               ],
@@ -741,6 +889,4 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       },
     );
   }
-
-
 }
