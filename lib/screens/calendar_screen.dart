@@ -6,6 +6,7 @@ import 'menu_archive_screen.dart';
 import '../models/models.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../services/localization.dart';
+import '../services/auth_service.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -30,9 +31,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _menuItemsStream = FirebaseFirestore.instance
         .collection('menu_items')
         .snapshots();
+    final uid = AuthService.currentUser?.uid ?? 'user_1';
     _mealLogsStream = FirebaseFirestore.instance
         .collection('meal_logs')
-        .where('userId', isEqualTo: 'user_1')
+        .where('userId', isEqualTo: uid)
         .snapshots();
   }
 
@@ -501,20 +503,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  // --- COMPONENT 3: Campus Menu Archive ---
+  // --- COMPONENT 3: Campus Menu Archive (Live Firebase) ---
   Widget _buildCampusArchiveSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Campus Menu Archive",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          Text(
+            LocalizationService.tr('campus_archive'),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            "Viewing menus offered on ${_selectedDate.month}/${_selectedDate.day}",
+            "${_selectedDate.month}/${_selectedDate.day} 제공 메뉴",
             style: TextStyle(
               color: Colors.grey[500],
               fontSize: 13,
@@ -522,21 +524,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildArchiveRestaurantCard(
-            "Mom's Kitchen",
-            "Classic Bibimbap, Handmade Tonkatsu",
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+              final restaurants = snapshot.data!.docs;
+              return Column(
+                children: restaurants.map((doc) {
+                  final name = doc['name'] as String? ?? '';
+                  return _buildArchiveRestaurantCard(name);
+                }).toList(),
+              );
+            },
           ),
-          _buildArchiveRestaurantCard(
-            "Student Lounge (Sola Fide)",
-            "Spicy Pork Bowl, Tuna Mayo Rice",
-          ),
-          _buildArchiveRestaurantCard("Dasu Handong", "Kimchi Jjigae"),
         ],
       ),
     );
   }
 
-  Widget _buildArchiveRestaurantCard(String name, String menuPreview) {
+  Widget _buildArchiveRestaurantCard(String name) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -561,16 +567,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
           title: Text(
             name,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          ),
-          subtitle: Text(
-            menuPreview,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
           ),
           trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         ),

@@ -70,5 +70,14 @@ class LocalizationService {
     'write_a_review': {'en': 'Write a Review', 'ko': '리뷰 작성하기'},
     'review_hint': {'en': 'How was the taste, portions, and freshness?', 'ko': '맛, 양, 그리고 신선도는 어땠나요?'},
     'submit_review': {'en': 'Post Review & Log', 'ko': '리뷰 및 기록 등록'},
+
+    // Campus Archive
+    'campus_archive': {'en': 'Campus Menu Archive', 'ko': '캠퍼스 메뉴 기록'},
+
+    // Dish Detail extra
+    'reviews_summary': {'en': 'Reviews Summary', 'ko': '리뷰 요약'},
+    'no_reviews_yet': {'en': 'No reviews yet. Be the first to share your thoughts!', 'ko': '아직 리뷰가 없습니다. 첫 번째 리뷰를 남겨보세요!'},
+    'generate_ai': {'en': 'Generate AI Description', 'ko': 'AI 설명 생성'},
+    'no_photos_yet': {'en': 'No photos yet', 'ko': '아직 사진이 없습니다'},
   };
 }

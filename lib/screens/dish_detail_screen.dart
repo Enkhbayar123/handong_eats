@@ -409,8 +409,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                             Icons.auto_awesome,
                                             size: 18,
                                           ),
-                                          label: const Text(
-                                            "Generate AI Custom Insights",
+                                          label: Text(
+                                            LocalizationService.tr('generate_ai'),
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
@@ -458,9 +458,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           const SizedBox(height: 32),
 
                           // 5. Reviews Summary (Live calculations)
-                          const Text(
-                            "Reviews Summary",
-                            style: TextStyle(
+                          Text(
+                            LocalizationService.tr('reviews_summary'),
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
@@ -693,7 +693,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Center(
               child: Text(
-                "No reviews yet. Be the first to share your thoughts!",
+                LocalizationService.tr('no_reviews_yet'),
                 style: TextStyle(
                   color: Colors.grey[400],
                   fontSize: 15,
@@ -721,9 +721,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                   .doc(review.userId)
                   .get(),
               builder: (context, userSnap) {
-                String name = "Alex Chan";
-                String userImage =
-                    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=200&q=80";
+                String name = "사용자";
+                String userImage = "";
                 int userReviewCount = 0;
 
                 if (userSnap.hasData && userSnap.data!.exists) {

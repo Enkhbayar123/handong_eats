@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
+import '../services/auth_service.dart';
 
 class SelectMealScreen extends StatefulWidget {
   const SelectMealScreen({super.key});
@@ -241,7 +242,7 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
                     for (String itemId in _checkedItemIds) {
                       final newLog = MealLogModel(
                         id: '',
-                        userId: 'user_1', // Mocked user
+                        userId: AuthService.currentUser?.uid ?? 'user_1',
                         menuItemId: itemId,
                         date: DateTime.now(),
                         mealType: _selectedMealType,
