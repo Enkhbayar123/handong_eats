@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/models.dart';
 import '../services/localization.dart';
+import '../services/auth_service.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 
@@ -243,7 +244,7 @@ void showAddReviewBottomSheet(
                             .doc();
                         final newReview = ReviewModel(
                           id: reviewDocRef.id,
-                          userId: 'user_1',
+                          userId: AuthService.currentUser?.uid ?? 'user_1',
                           menuItemId: dish.id,
                           rating: localRating,
                           originalReview: originalText,
@@ -259,7 +260,7 @@ void showAddReviewBottomSheet(
                             .doc();
                         final newLog = MealLogModel(
                           id: logDocRef.id,
-                          userId: 'user_1',
+                          userId: AuthService.currentUser?.uid ?? 'user_1',
                           menuItemId: dish.id,
                           date: DateTime.now(),
                           mealType: selectedMealType,
@@ -269,10 +270,9 @@ void showAddReviewBottomSheet(
                         );
                         await logDocRef.set(newLog.toMap());
 
-                        // 3. Update User's Review Count
                         final userRef = FirebaseFirestore.instance
                             .collection('users')
-                            .doc('user_1');
+                            .doc(AuthService.currentUser?.uid ?? 'user_1');
                         await userRef.set({
                           'reviewCount': FieldValue.increment(1),
                         }, SetOptions(merge: true));
