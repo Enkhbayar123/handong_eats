@@ -15,6 +15,36 @@ void main() async {
     debugPrint("Failed to load .env file: $e");
   }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // ONE-TIME FIX: Remove fake review counts from database
+  try {
+    final menuItems = await FirebaseFirestore.instance
+        .collection('menu_items')
+        .get();
+    for (var doc in menuItems.docs) {
+      final reviews = await FirebaseFirestore.instance
+          .collection('reviews')
+          .where('menuItemId', isEqualTo: doc.id)
+          .get();
+      int count = reviews.docs.length;
+      double totalRating = 0.0;
+      for (var r in reviews.docs) {
+        totalRating += (r['rating'] as num).toDouble();
+      }
+      double avgRating = count > 0 ? totalRating / count : 0.0;
+      avgRating = double.parse(avgRating.toStringAsFixed(1));
+      await doc.reference.update({
+        'reviewCount': count,
+        'averageRating': avgRating,
+      });
+    }
+    debugPrint(
+      "✅ Reviews database successfully cleaned and hardcoded numbers removed!",
+    );
+  } catch (e) {
+    debugPrint("Error fixing reviews: $e");
+  }
+
   // Auto-seed if database is empty to guarantee a working first-launch experience
   try {
     final rests = await FirebaseFirestore.instance

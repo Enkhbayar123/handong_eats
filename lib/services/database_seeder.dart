@@ -36,7 +36,7 @@ class DatabaseSeeder {
         country: 'United States',
         spiceTolerance: 'Mild',
         preferredTastes: ['Sweet', 'Savory'],
-        reviewCount: 2, // Iron
+        reviewCount: 0, // Iron
       ),
       UserModel(
         uid: 'user_3',
@@ -49,7 +49,7 @@ class DatabaseSeeder {
         allergies: [],
         pushNotificationsEnabled: true,
         favoriteMenuIds: [],
-        reviewCount: 120, // Diamond
+        reviewCount: 0, // Diamond
       ),
       UserModel(
         uid: 'user_4',
@@ -62,7 +62,7 @@ class DatabaseSeeder {
         allergies: ['Gluten'],
         pushNotificationsEnabled: true,
         favoriteMenuIds: [],
-        reviewCount: 65, // Platinum
+        reviewCount: 0, // Platinum
       ),
       UserModel(
         uid: 'user_5',
@@ -75,7 +75,7 @@ class DatabaseSeeder {
         allergies: [],
         pushNotificationsEnabled: false,
         favoriteMenuIds: [],
-        reviewCount: 35, // Gold
+        reviewCount: 0, // Gold
       ),
       UserModel(
         uid: 'user_6',
@@ -88,7 +88,7 @@ class DatabaseSeeder {
         allergies: [],
         pushNotificationsEnabled: true,
         favoriteMenuIds: [],
-        reviewCount: 15, // Silver
+        reviewCount: 0, // Silver
       ),
       UserModel(
         uid: 'user_7',
@@ -101,7 +101,7 @@ class DatabaseSeeder {
         allergies: [],
         pushNotificationsEnabled: false,
         favoriteMenuIds: [],
-        reviewCount: 5, // Bronze
+        reviewCount: 0, // Bronze
 
       ),
     ];
@@ -187,8 +187,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
         description: 'Freshly prepared daily special.',
-        averageRating: 4.5,
-        reviewCount: 120,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 600,
         protein: 30,
         carbs: 65,
@@ -202,8 +202,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
         description: 'Healthy and traditional bibimbap with fresh vegetables.',
-        averageRating: 4.8,
-        reviewCount: 200,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 500,
         protein: 15,
         carbs: 80,
@@ -217,8 +217,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
         description: 'Crispy fried pork cutlet with savory sauce.',
-        averageRating: 4.7,
-        reviewCount: 150,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 800,
         protein: 35,
         carbs: 70,
@@ -234,8 +234,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
         description: 'Standard static meal.',
-        averageRating: 4.2,
-        reviewCount: 80,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 450,
         protein: 20,
         carbs: 60,
@@ -249,8 +249,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80',
         description: 'Standard static meal.',
-        averageRating: 4.3,
-        reviewCount: 75,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 480,
         protein: 25,
         carbs: 55,
@@ -264,8 +264,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
         description: 'Standard static meal.',
-        averageRating: 4.1,
-        reviewCount: 60,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 500,
         protein: 22,
         carbs: 65,
@@ -281,8 +281,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
         description: 'Goshen standard meal.',
-        averageRating: 4.0,
-        reviewCount: 40,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 400,
         protein: 18,
         carbs: 50,
@@ -296,8 +296,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
         description: 'Goshen standard meal.',
-        averageRating: 4.1,
-        reviewCount: 45,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 420,
         protein: 20,
         carbs: 55,
@@ -311,8 +311,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
         description: 'Goshen standard meal.',
-        averageRating: 4.2,
-        reviewCount: 50,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 440,
         protein: 22,
         carbs: 60,
@@ -326,8 +326,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
         description: 'Goshen standard meal.',
-        averageRating: 4.0,
-        reviewCount: 30,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 410,
         protein: 19,
         carbs: 52,
@@ -341,8 +341,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80',
         description: 'Goshen standard meal.',
-        averageRating: 4.3,
-        reviewCount: 60,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 460,
         protein: 24,
         carbs: 58,
@@ -358,8 +358,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
         description: 'Traditional Korean soup and sides.',
-        averageRating: 4.4,
-        reviewCount: 110,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 550,
         protein: 25,
         carbs: 65,
@@ -373,8 +373,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
         description: 'Stir-fry with rice and sides.',
-        averageRating: 4.6,
-        reviewCount: 130,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 600,
         protein: 30,
         carbs: 70,
@@ -390,8 +390,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
         description: 'Premium balanced meal.',
-        averageRating: 4.8,
-        reviewCount: 210,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 550,
         protein: 40,
         carbs: 50,
@@ -405,8 +405,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
         description: 'Premium hearty meal.',
-        averageRating: 4.9,
-        reviewCount: 180,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 650,
         protein: 45,
         carbs: 60,
@@ -422,8 +422,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
         description: 'A surprise every day.',
-        averageRating: 4.5,
-        reviewCount: 95,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 500,
         protein: 25,
         carbs: 60,
@@ -439,8 +439,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80',
         description: 'Convenient and filling student bento.',
-        averageRating: 4.3,
-        reviewCount: 150,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 550,
         protein: 20,
         carbs: 75,
@@ -454,8 +454,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
         description: 'Premium bento with extra sides.',
-        averageRating: 4.6,
-        reviewCount: 110,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 650,
         protein: 25,
         carbs: 80,
@@ -471,8 +471,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
         description: 'Authentic daily Korean food.',
-        averageRating: 4.4,
-        reviewCount: 85,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 550,
         protein: 25,
         carbs: 70,
@@ -486,8 +486,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
         description: 'Classic stew and rice.',
-        averageRating: 4.5,
-        reviewCount: 90,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 600,
         protein: 30,
         carbs: 65,
@@ -501,8 +501,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
         description: 'Spicy and hot ramen.',
-        averageRating: 4.7,
-        reviewCount: 300,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 450,
         protein: 10,
         carbs: 70,
@@ -516,8 +516,8 @@ class DatabaseSeeder {
         imageUrl:
             'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
         description: 'Savory fried rice with egg.',
-        averageRating: 4.5,
-        reviewCount: 140,
+        averageRating: 0.0,
+        reviewCount: 0,
         calories: 580,
         protein: 15,
         carbs: 85,
