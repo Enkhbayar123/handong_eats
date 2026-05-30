@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_generative_ai/google_generative_ai.dart'; // Import for Gemini API
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'photo_gallery_screen.dart';
 import 'review_detail_screen.dart';
 import '../models/models.dart';
@@ -25,7 +26,6 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     super.initState();
     _averageRating = widget.dish.averageRating.toDouble();
     _reviewCount = widget.dish.reviewCount;
-    _generateAIDescription();
   }
 
   bool _isLoading = false;
@@ -37,11 +37,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     });
 
     try {
-      // Secure API Key: allows overriding using --dart-define=GEMINI_API_KEY=YOUR_KEY
-      const apiKey = String.fromEnvironment(
-        'GEMINI_API_KEY',
-        defaultValue: 'AIzaSyDSiGXcpR7jAhIU8OUyeX67dob19Z99RmY',
-      );
+      // Secure API Key loaded dynamically from .env to prevent leakage on GitHub
+      final apiKey = (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ?? const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
       
       // Using gemini-flash-latest for rapid text generations
       final model = GenerativeModel(model: 'gemini-flash-latest', apiKey: apiKey);
@@ -102,31 +99,37 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             .trim();
       }
 
-      setState(() {
-        _aiDescription = cleanText;
-      });
+      if (mounted) {
+        setState(() {
+          _aiDescription = cleanText;
+        });
+      }
     } catch (e) {
       debugPrint('Gemini API Error: $e');
       final errorStr = e.toString();
-      setState(() {
-        if (errorStr.contains('API key expired')) {
-          _aiDescription = 'Failed to generate AI description because the API key is expired.\n\n'
-              'To fix this, please run your app with a valid key:\n'
-              'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY\n\n'
-              'Or replace the expired apiKey variable in dish_detail_screen.dart.';
-        } else if (errorStr.contains('blocked') || errorStr.contains('API key not valid')) {
-          _aiDescription = 'Failed to generate AI description because the API key is restricted or invalid.\n\n'
-              'Please verify that your Google AI Studio API key has permission for the Generative Language API, '
-              'or run with a valid key:\n'
-              'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY';
-        } else {
-          _aiDescription = 'Failed to generate smart description. Please try again.\nError: $e';
-        }
-      });
+      if (mounted) {
+        setState(() {
+          if (errorStr.contains('API key expired')) {
+            _aiDescription = 'Failed to generate AI description because the API key is expired.\n\n'
+                'To fix this, please run your app with a valid key:\n'
+                'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY\n\n'
+                'Or replace the expired apiKey variable in dish_detail_screen.dart.';
+          } else if (errorStr.contains('blocked') || errorStr.contains('API key not valid')) {
+            _aiDescription = 'Failed to generate AI description because the API key is restricted or invalid.\n\n'
+                'Please verify that your Google AI Studio API key has permission for the Generative Language API, '
+                'or run with a valid key:\n'
+                'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY';
+          } else {
+            _aiDescription = 'Failed to generate smart description. Please try again.\nError: $e';
+          }
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -282,18 +285,25 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(Icons.auto_awesome, color: const Color(0xFF6B4EFF), size: 18),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      "SMART MENU DESCRIPTION",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF6B4EFF),
-                                        letterSpacing: 1.0,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.auto_awesome, color: const Color(0xFF6B4EFF), size: 18),
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          "SMART MENU DESCRIPTION",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF6B4EFF),
+                                            letterSpacing: 1.0,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                    if (_aiDescription != null)
+                                      Icon(Icons.check_circle_rounded, color: Colors.green[600], size: 16),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
@@ -315,16 +325,45 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                     ),
                                   )
                                 else
-                                  Text(
-                                    widget.dish.description.isNotEmpty
-                                        ? widget.dish.description
-                                        : "A savory, freshly-prepared selection crafted with healthy and seasonal ingredients.",
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      height: 1.5,
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.dish.description.isNotEmpty
+                                            ? widget.dish.description
+                                            : "A savory, freshly-prepared selection crafted with healthy and seasonal ingredients.",
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          height: 1.5,
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 48,
+                                        child: ElevatedButton.icon(
+                                          onPressed: _generateAIDescription,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFF6B4EFF),
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(16),
+                                            ),
+                                            elevation: 0,
+                                          ),
+                                          icon: const Icon(Icons.auto_awesome, size: 18),
+                                          label: const Text(
+                                            "Generate AI Custom Insights",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                               ],
                             ),

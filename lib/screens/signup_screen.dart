@@ -3,7 +3,14 @@ import '../services/auth_service.dart';
 import 'main_navigation.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String? initialName;
+  final String? initialEmail;
+
+  const SignUpScreen({
+    super.key,
+    this.initialName,
+    this.initialEmail,
+  });
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -68,6 +75,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final List<String> _selectedDietary = [];
   final List<String> _selectedAllergies = [];
   final List<String> _selectedFlavors = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialName != null) {
+      _nameController.text = widget.initialName!;
+    }
+    if (widget.initialEmail != null) {
+      _emailController.text = widget.initialEmail!;
+      _passwordController.text = "google-sign-in";
+    }
+  }
 
   @override
   void dispose() {
@@ -302,13 +321,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameController,
+              readOnly: widget.initialName != null,
               keyboardType: TextInputType.name,
               validator: (val) => val == null || val.isEmpty ? "Name is required" : null,
               decoration: InputDecoration(
                 hintText: "E.g., Jack Smith",
                 hintStyle: TextStyle(color: Colors.grey[400]),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: widget.initialName != null ? Colors.grey[200] : Colors.grey[100],
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.all(20),
                 prefixIcon: const Icon(Icons.badge_outlined, size: 20),
@@ -344,6 +364,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _emailController,
+              readOnly: widget.initialEmail != null,
               keyboardType: TextInputType.emailAddress,
               validator: (val) {
                 if (val == null || val.isEmpty) return "Email is required";
@@ -354,7 +375,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 hintText: "student@handong.ac.kr",
                 hintStyle: TextStyle(color: Colors.grey[400]),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: widget.initialEmail != null ? Colors.grey[200] : Colors.grey[100],
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.all(20),
                 prefixIcon: const Icon(Icons.alternate_email, size: 20),
@@ -367,6 +388,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _passwordController,
+              readOnly: widget.initialEmail != null,
               obscureText: _obscurePassword,
               validator: (val) {
                 if (val == null || val.isEmpty) return "Password is required";
@@ -377,18 +399,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 hintText: "••••••••",
                 hintStyle: TextStyle(color: Colors.grey[400]),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: widget.initialEmail != null ? Colors.grey[200] : Colors.grey[100],
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.all(20),
                 prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
+                suffixIcon: widget.initialEmail != null
+                    ? null
+                    : IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
               ),
             ),
             const SizedBox(height: 32),

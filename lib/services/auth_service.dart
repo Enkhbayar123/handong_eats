@@ -1,13 +1,78 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/models.dart';
+
+class GoogleSignInResult {
+  final bool success;
+  final bool isNewUser;
+  final String? email;
+  final String? name;
+  final String? errorMessage;
+
+  GoogleSignInResult({
+    required this.success,
+    this.isNewUser = false,
+    this.email,
+    this.name,
+    this.errorMessage,
+  });
+}
 
 class AuthService {
   static UserModel? currentUser;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
   /// Checks if a user is logged in
   static bool get isLoggedIn => currentUser != null;
+
+  /// Authenticates using Google Sign-In and Firebase Auth
+  static Future<GoogleSignInResult> signInWithGoogle() async {
+    try {
+      await GoogleSignIn.instance.initialize();
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: null,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final User? firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        return GoogleSignInResult(success: false, errorMessage: "Firebase sign-in failed.");
+      }
+
+      final String email = firebaseUser.email ?? '';
+      final String name = firebaseUser.displayName ?? '';
+
+      // Check if user already exists in Firestore by email
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email.trim())
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        currentUser = UserModel.fromFirestore(querySnapshot.docs.first);
+        debugPrint('Logged in existing Google user: ${currentUser?.name}');
+        return GoogleSignInResult(success: true, isNewUser: false, email: email, name: name);
+      } else {
+        debugPrint('Google user not found in Firestore users collection.');
+        return GoogleSignInResult(success: true, isNewUser: true, email: email, name: name);
+      }
+    } catch (e) {
+      debugPrint('Error during Google Sign-In: $e');
+      String errorMsg = e.toString();
+      if (errorMsg.contains("canceled") || errorMsg.contains("cancelled")) {
+        errorMsg = "Google sign-in cancelled by user.";
+      }
+      return GoogleSignInResult(success: false, errorMessage: errorMsg);
+    }
+  }
 
   /// Logs in the user by matching their email in the Firestore 'users' collection
   static Future<bool> login(String email) async {
@@ -96,6 +161,8 @@ class AuthService {
   /// Log out current session
   static void logout() {
     currentUser = null;
+    _auth.signOut().catchError((e) => debugPrint('Error firebase sign out: $e'));
+    GoogleSignIn.instance.signOut().catchError((e) => debugPrint('Error google sign out: $e'));
     debugPrint('Logged out current user session');
   }
 }
