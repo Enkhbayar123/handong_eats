@@ -29,7 +29,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   Widget build(BuildContext context) {
     final activeUserId = AuthService.currentUser?.uid ?? 'user_1';
 
-    return Scaffold(
+    return ValueListenableBuilder<String>(
+      valueListenable: LocalizationService.currentLanguage,
+      builder: (context, lang, child) {
+        return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
         title: Text(
@@ -110,6 +113,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           );
         },
       ),
+    );
+      },
     );
   }
 

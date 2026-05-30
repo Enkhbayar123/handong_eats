@@ -785,7 +785,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                   CircleAvatar(
                                     radius: 18,
                                     backgroundColor: Colors.grey[200],
-                                    backgroundImage: NetworkImage(userImage),
+                                    backgroundImage: userImage.isNotEmpty ? NetworkImage(userImage) : null,
+                                    child: userImage.isEmpty ? const Icon(Icons.person, color: Colors.grey) : null,
                                   ),
                                   const SizedBox(width: 12),
                                   Column(
