@@ -72,5 +72,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'handong-eats-61f3d.firebasestorage.app',
     measurementId: 'G-EKWMD8N1HL',
   );
-
 }

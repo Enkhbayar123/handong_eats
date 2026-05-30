@@ -4,8 +4,8 @@ import 'nutrition_dashboard_screen.dart';
 import 'login_screen.dart';
 import 'dish_detail_screen.dart';
 import '../models/models.dart';
-
-
+import '../widgets/tier_badge.dart';
+import '../services/localization.dart';
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
 
@@ -14,21 +14,41 @@ class MyProfileScreen extends StatefulWidget {
 }
 
 class _MyProfileScreenState extends State<MyProfileScreen> {
+  late final Stream<DocumentSnapshot> _userStream;
+  late final Stream<QuerySnapshot> _mealLogsStream;
+  late final Stream<QuerySnapshot> _reviewsStream;
+  late final Stream<QuerySnapshot> _menuItemsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _userStream = FirebaseFirestore.instance.collection('users').doc('user_1').snapshots();
+    _mealLogsStream = FirebaseFirestore.instance
+        .collection('meal_logs')
+        .where('userId', isEqualTo: 'user_1')
+        .snapshots();
+    _reviewsStream = FirebaseFirestore.instance
+        .collection('reviews')
+        .where('userId', isEqualTo: 'user_1')
+        .snapshots();
+    _menuItemsStream = FirebaseFirestore.instance.collection('menu_items').snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
-        title: const Text(
-          "My Profile",
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
+        title: Text(
+          LocalizationService.tr('profile_title'),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc('user_1').snapshots(),
+        stream: _userStream,
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -45,18 +65,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           final user = UserModel.fromFirestore(userSnapshot.data!);
 
           return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('meal_logs')
-                .where('userId', isEqualTo: 'user_1')
-                .snapshots(),
+            stream: _mealLogsStream,
             builder: (context, logsSnapshot) {
               final logCount = logsSnapshot.data?.docs.length ?? 0;
 
               return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('reviews')
-                    .where('userId', isEqualTo: 'user_1')
-                    .snapshots(),
+                stream: _reviewsStream,
                 builder: (context, reviewsSnapshot) {
                   final reviewCount = reviewsSnapshot.data?.docs.length ?? 0;
 
@@ -103,102 +117,69 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   // --- UI BUILDERS ---
 
   Widget _buildPremiumHeaderCard(UserModel user, int logCount, int reviewCount) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE94E5D), Color(0xFFFF7B87)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE94E5D).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 48,
+            backgroundColor: Colors.grey[200],
+            backgroundImage: NetworkImage(
+              user.profileImageUrl.isNotEmpty
+                  ? user.profileImageUrl
+                  : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80",
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                user.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(width: 8),
+              TierBadge(reviewCount: user.reviewCount),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "${LocalizationService.tr('student_id')}: ${user.studentId}",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            user.email,
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 28),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildHeaderStatColumn("$logCount", "Meal Logs"),
+              Container(
+                height: 40,
+                width: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                color: Colors.grey[300],
+              ),
+              _buildHeaderStatColumn("$reviewCount", LocalizationService.tr('review_count')),
+            ],
           ),
         ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: CircleAvatar(
-                    radius: 38,
-                    backgroundColor: Colors.grey[200],
-                    backgroundImage: NetworkImage(
-                      user.profileImageUrl.isNotEmpty
-                          ? user.profileImageUrl
-                          : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80",
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.name,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Student ID: ${user.studentId}",
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        user.email,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildHeaderStatColumn("$logCount", "Meal Logs"),
-                  Container(
-                    height: 32,
-                    width: 1,
-                    color: Colors.white.withOpacity(0.2),
-                  ),
-                  _buildHeaderStatColumn("$reviewCount", "Reviews"),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -209,18 +190,18 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         Text(
           count,
           style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -262,7 +243,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     }
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('menu_items').snapshots(),
+      stream: _menuItemsStream,
       builder: (context, menuSnapshot) {
         if (menuSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -534,6 +515,31 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   .collection('users')
                   .doc('user_1')
                   .set({'pushNotificationsEnabled': value}, SetOptions(merge: true));
+            },
+          ),
+          const Divider(height: 1, indent: 60),
+          SwitchListTile(
+            secondary: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.teal[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.language,
+                color: Colors.teal[600],
+                size: 20,
+              ),
+            ),
+            title: Text(
+              LocalizationService.tr('language_setting'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            subtitle: Text(LocalizationService.tr('language_toggle')),
+            value: LocalizationService.currentLanguage.value == 'ko',
+            activeColor: Colors.teal[600],
+            onChanged: (bool value) {
+              LocalizationService.toggleLanguage();
             },
           ),
 

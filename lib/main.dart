@@ -4,16 +4,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'services/database_seeder.dart';
+import 'services/localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Auto-seed if database is empty to guarantee a working first-launch experience
   try {
-    final rests = await FirebaseFirestore.instance.collection('restaurants').limit(1).get();
+    final rests = await FirebaseFirestore.instance
+        .collection('restaurants')
+        .limit(1)
+        .get();
     if (rests.docs.isEmpty) {
       await DatabaseSeeder.runAllSeeds();
     }
@@ -29,14 +31,20 @@ class HandongEatsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Handong Eats',
-      debugShowCheckedModeBanner: false, // Turn off that little "DEBUG" banner in the corner!
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
-        useMaterial3: true,
-      ),
-      home: const LoginScreen(), // <--- Set this as the initial route
+    return ValueListenableBuilder<String>(
+      valueListenable: LocalizationService.currentLanguage,
+      builder: (context, currentLang, child) {
+        return MaterialApp(
+          title: 'Handong Eats',
+          debugShowCheckedModeBanner:
+              false, // Turn off that little "DEBUG" banner in the corner!
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+            useMaterial3: true,
+          ),
+          home: const LoginScreen(),
+        );
+      },
     );
   }
 }

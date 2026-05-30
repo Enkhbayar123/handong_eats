@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'photo_gallery_screen.dart';
 import 'review_detail_screen.dart';
 import '../models/models.dart';
+import '../services/localization.dart';
+import '../widgets/add_review_bottom_sheet.dart';
+import '../widgets/tier_badge.dart';
 
 class DishDetailScreen extends StatefulWidget {
   final MenuItemModel dish;
@@ -212,7 +215,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton.icon(
-                              onPressed: () => _showAddReviewBottomSheet(context),
+                              onPressed: () => showAddReviewBottomSheet(context, widget.dish),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFE94E5D),
                                 foregroundColor: Colors.white,
@@ -220,8 +223,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                 elevation: 4,
                                 shadowColor: const Color(0xFFE94E5D).withOpacity(0.3),
                               ),
-                              icon: const Icon(Icons.add_a_photo_outlined),
-                              label: const Text("I ate this!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              icon: const Icon(Icons.edit_note_rounded),
+                              label: Text(LocalizationService.tr('write_review'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -236,7 +239,10 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("User Reviews", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                              Text(
+                                LocalizationService.tr('dish_reviews'),
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              ),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.push(
@@ -442,10 +448,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
               builder: (context, userSnap) {
                 String name = "Alex Chan";
                 String userImage = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=200&q=80";
+                int userReviewCount = 0;
 
                 if (userSnap.hasData && userSnap.data!.exists) {
-                  name = userSnap.data!.get('name') ?? name;
-                  userImage = userSnap.data!.get('profileImageUrl') ?? userImage;
+                  final data = userSnap.data!.data() as Map<String, dynamic>? ?? {};
+                  name = data['name'] ?? name;
+                  userImage = data['profileImageUrl'] ?? userImage;
+                  userReviewCount = data['reviewCount'] ?? 0;
                 }
 
                 // Format time difference
@@ -471,6 +480,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           date: dateStr,
                           originalReview: review.originalReview,
                           translatedReview: review.translatedReview,
+                          userReviewCount: userReviewCount,
                           backgroundImageUrl: review.backgroundImageUrl.isNotEmpty
                               ? review.backgroundImageUrl
                               : "https://images.unsplash.com/photo-1552611052-33e04de081de?w=800&q=80",
@@ -504,7 +514,14 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                      Row(
+                                        children: [
+                                          Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                          const SizedBox(width: 8),
+                                          TierBadge(reviewCount: userReviewCount),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
                                       Row(
                                         children: List.generate(
                                           5,
@@ -523,11 +540,36 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            review.originalReview,
-                            style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  review.originalReview,
+                                  style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (review.backgroundImageUrl.isNotEmpty) ...[
+                                const SizedBox(width: 12),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    review.backgroundImageUrl,
+                                    width: 60,
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      width: 60,
+                                      height: 60,
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
@@ -542,214 +584,5 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     );
   }
 
-  // --- REVIEW SUBMISSION BOTTOM SHEET ---
-  void _showAddReviewBottomSheet(BuildContext context) {
-    int localRating = 5;
-    String selectedMealType = "Lunch";
-    final noteController = TextEditingController();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (BuildContext bc) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                top: 24,
-                left: 24,
-                right: 24,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 48,
-                        height: 5,
-                        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      "Add Meal Log & Review",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Record your plate and share your feedback on ${widget.dish.name}.",
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Meal Type
-                    const Text("Meal Type", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: ["Breakfast", "Lunch", "Dinner"].map((type) {
-                        bool isSel = selectedMealType == type;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ChoiceChip(
-                            label: Text(type),
-                            selected: isSel,
-                            selectedColor: const Color(0xFFE94E5D),
-                            onSelected: (selected) {
-                              if (selected) {
-                                setModalState(() {
-                                  selectedMealType = type;
-                                });
-                              }
-                            },
-                            labelStyle: TextStyle(
-                              color: isSel ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Rating
-                    const Text("Rating", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: List.generate(5, (index) {
-                        final star = index + 1;
-                        return GestureDetector(
-                          onTap: () {
-                            setModalState(() {
-                              localRating = star;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Icon(
-                              star <= localRating ? Icons.star_rounded : Icons.star_border_rounded,
-                              color: star <= localRating ? Colors.amber : Colors.grey[300],
-                              size: 40,
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Review text
-                    const Text("Write a Review", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: noteController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: "How was the taste, portions, and freshness?",
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        filled: true,
-                        fillColor: const Color(0xFFF3F4F6),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.all(16),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          Navigator.pop(bc);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Saving your meal log & review...")),
-                          );
-
-                          final String userReviewText = noteController.text.trim();
-                          final String originalText = userReviewText.isNotEmpty ? userReviewText : "Delicious!";
-
-                          // Generate mock translation for bilingual users
-                          final String translatedText = originalText == "Delicious!"
-                              ? "Delicious!"
-                              : "Translation: $originalText";
-
-                          // 1. Add review
-                          final reviewDocRef = FirebaseFirestore.instance.collection('reviews').doc();
-                          final newReview = ReviewModel(
-                            id: reviewDocRef.id,
-                            userId: 'user_1',
-                            menuItemId: widget.dish.id,
-                            rating: localRating,
-                            originalReview: originalText,
-                            translatedReview: translatedText,
-                            datePosted: DateTime.now(),
-                            backgroundImageUrl: widget.dish.imageUrl,
-                          );
-                          await reviewDocRef.set(newReview.toMap());
-
-                          // 2. Add meal log
-                          final logDocRef = FirebaseFirestore.instance.collection('meal_logs').doc();
-                          final newLog = MealLogModel(
-                            id: logDocRef.id,
-                            userId: 'user_1',
-                            menuItemId: widget.dish.id,
-                            date: DateTime.now(),
-                            mealType: selectedMealType,
-                            rating: localRating,
-                            personalNote: originalText,
-                            photoUrl: widget.dish.imageUrl,
-                          );
-                          await logDocRef.set(newLog.toMap());
-
-                          // 3. Update restaurant and menu item stats in Transaction
-                          final dishRef = FirebaseFirestore.instance.collection('menu_items').doc(widget.dish.id);
-                          await FirebaseFirestore.instance.runTransaction((transaction) async {
-                            final freshSnap = await transaction.get(dishRef);
-                            if (freshSnap.exists) {
-                              final currentRating = freshSnap.get('averageRating') ?? 0.0;
-                              final currentCount = freshSnap.get('reviewCount') ?? 0;
-
-                              final newCount = currentCount + 1;
-                              final newRating = ((currentRating * currentCount) + localRating) / newCount;
-
-                              transaction.update(dishRef, {
-                                'averageRating': double.parse(newRating.toStringAsFixed(1)),
-                                'reviewCount': newCount,
-                              });
-                            }
-                          });
-
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Successfully logged meal and posted review! 🎉"),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE94E5D),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
-                        ),
-                        child: const Text("Post Review & Log", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 }

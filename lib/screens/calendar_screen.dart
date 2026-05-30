@@ -4,6 +4,8 @@ import 'edit_log_screen.dart';
 import 'select_meal_screen.dart';
 import 'menu_archive_screen.dart';
 import '../models/models.dart';
+import 'package:table_calendar/table_calendar.dart';
+import '../services/localization.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -14,6 +16,21 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _selectedDate = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
+  late final Stream<QuerySnapshot> _restaurantsStream;
+  late final Stream<QuerySnapshot> _menuItemsStream;
+  late final Stream<QuerySnapshot> _mealLogsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _restaurantsStream = FirebaseFirestore.instance.collection('restaurants').snapshots();
+    _menuItemsStream = FirebaseFirestore.instance.collection('menu_items').snapshots();
+    _mealLogsStream = FirebaseFirestore.instance
+        .collection('meal_logs')
+        .where('userId', isEqualTo: 'user_1')
+        .snapshots();
+  }
 
   bool _hasLunch(DateTime date, List<MealLogModel> logs) {
     return logs.any((log) => log.mealType == "Lunch" && isSameDay(log.date, date));
@@ -42,7 +59,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
+      stream: _restaurantsStream,
       builder: (context, snapshotR) {
         if (snapshotR.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -50,7 +67,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         final restaurants = snapshotR.data?.docs.map((doc) => RestaurantModel.fromFirestore(doc)).toList() ?? [];
 
         return StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('menu_items').snapshots(),
+          stream: _menuItemsStream,
           builder: (context, snapshotM) {
             if (snapshotM.connectionState == ConnectionState.waiting) {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -58,10 +75,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             final allMeals = snapshotM.data?.docs.map((doc) => MenuItemModel.fromFirestore(doc)).toList() ?? [];
 
             return StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('meal_logs')
-                  .where('userId', isEqualTo: 'user_1')
-                  .snapshots(),
+              stream: _mealLogsStream,
               builder: (context, snapshotL) {
                 if (snapshotL.connectionState == ConnectionState.waiting) {
                   return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -72,9 +86,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 return Scaffold(
                   backgroundColor: const Color(0xFFF8F9FB),
                   appBar: AppBar(
-                    title: const Text(
-                      "Calendar",
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
+                    title: Text(
+                      LocalizationService.tr('calendar_title'),
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
                     ),
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
@@ -85,7 +99,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildCalendarStrip(logs),
+                        _buildTableCalendar(logs),
                         const SizedBox(height: 24),
                         _buildMyPlateSection(todaysLogs, allMeals, restaurants),
                         const SizedBox(height: 32),
@@ -103,141 +117,77 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  // --- COMPONENT 1: Horizontal Date Picker with Dots ---
-  Widget _buildCalendarStrip(List<MealLogModel> logs) {
+  // --- COMPONENT 1: Full Monthly Calendar ---
+  Widget _buildTableCalendar(List<MealLogModel> logs) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Dynamic Month/Year Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              _getMonthYear(_selectedDate),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: -0.5),
-            ),
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TableCalendar(
+        firstDay: DateTime.utc(2020, 1, 1),
+        lastDay: DateTime.utc(2030, 12, 31),
+        focusedDay: _focusedDay,
+        selectedDayPredicate: (day) => isSameDay(_selectedDate, day),
+        onDaySelected: (selectedDay, focusedDay) {
+          setState(() {
+            _selectedDate = selectedDay;
+            _focusedDay = focusedDay;
+          });
+        },
+        onPageChanged: (focusedDay) {
+          _focusedDay = focusedDay;
+        },
+        calendarFormat: CalendarFormat.month,
+        headerStyle: const HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        calendarStyle: const CalendarStyle(
+          todayDecoration: BoxDecoration(
+            color: Color(0x40E94E5D), // Light red for today
+            shape: BoxShape.circle,
           ),
-          const SizedBox(height: 16),
-          // Horizontal Date Scroller
-          SizedBox(
-            height: 90,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: 14,
-              itemBuilder: (context, index) {
-                DateTime date = DateTime.now().subtract(Duration(days: 7 - index));
-                bool isSelected = isSameDay(date, _selectedDate);
+          selectedDecoration: BoxDecoration(
+            color: Color(0xFFE94E5D), // Dark/primary red for selected
+            shape: BoxShape.circle,
+          ),
+        ),
+        calendarBuilders: CalendarBuilders(
+          markerBuilder: (context, date, events) {
+            // Build the meal dots under the date
+            bool hasB = _hasBreakfast(date, logs);
+            bool hasL = _hasLunch(date, logs);
+            bool hasD = _hasDinner(date, logs);
+            
+            if (!hasB && !hasL && !hasD) return null;
 
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedDate = date;
-                    });
-                  },
-                  child: Container(
-                    width: 60,
-                    margin: EdgeInsets.only(
-                      left: index == 0 ? 16 : 4,
-                      right: index == 13 ? 16 : 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFE94E5D) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFFE94E5D).withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              )
-                            ]
-                          : [],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Day of week
-                        Text(
-                          _getWeekday(date.weekday),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: isSelected ? Colors.white70 : Colors.grey[500],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        // Date number
-                        Text(
-                          "${date.day}",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        // Dots Indicator Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_hasBreakfast(date, logs))
-                              Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? Colors.white : Colors.orangeAccent,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            if (_hasLunch(date, logs))
-                              Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? Colors.white : Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            if (_hasDinner(date, logs))
-                              Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? Colors.white : Colors.blue,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+            return Positioned(
+              bottom: 4,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasB) _buildDot(Colors.orangeAccent),
+                  if (hasL) _buildDot(Colors.green),
+                  if (hasD) _buildDot(Colors.blue),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  String _getWeekday(int weekday) {
-    switch (weekday) {
-      case 1: return "MON";
-      case 2: return "TUE";
-      case 3: return "WED";
-      case 4: return "THU";
-      case 5: return "FRI";
-      case 6: return "SAT";
-      case 7: return "SUN";
-      default: return "";
-    }
+  Widget _buildDot(Color color) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 1.0),
+      width: 5,
+      height: 5,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+    );
   }
 
   // --- COMPONENT 2: My Plate (User's Logs) ---
@@ -253,7 +203,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             children: [
               Row(
                 children: [
-                  const Text("My Plate", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(LocalizationService.tr('my_plate'), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

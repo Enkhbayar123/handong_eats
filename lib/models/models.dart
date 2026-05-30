@@ -12,6 +12,7 @@ class UserModel {
   final List<String> allergies;
   final bool pushNotificationsEnabled;
   final List<String> favoriteMenuIds;
+  final int reviewCount;
 
   UserModel({
     required this.uid,
@@ -23,6 +24,7 @@ class UserModel {
     required this.allergies,
     required this.pushNotificationsEnabled,
     required this.favoriteMenuIds,
+    this.reviewCount = 0,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -37,6 +39,7 @@ class UserModel {
       allergies: List<String>.from(data['allergies'] ?? []),
       pushNotificationsEnabled: data['pushNotificationsEnabled'] ?? false,
       favoriteMenuIds: List<String>.from(data['favoriteMenuIds'] ?? []),
+      reviewCount: data['reviewCount'] ?? 0,
     );
   }
 
@@ -50,6 +53,7 @@ class UserModel {
       'allergies': allergies,
       'pushNotificationsEnabled': pushNotificationsEnabled,
       'favoriteMenuIds': favoriteMenuIds,
+      'reviewCount': reviewCount,
     };
   }
 }

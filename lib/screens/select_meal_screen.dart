@@ -12,7 +12,21 @@ class SelectMealScreen extends StatefulWidget {
 class _SelectMealScreenState extends State<SelectMealScreen> {
   String _selectedMealType = "Lunch";
   final List<String> _mealTypes = ["Breakfast", "Lunch", "Dinner"];
-  final Set<String> _checkedItemIds = {}; // Storing IDs instead of names for Firebase
+  final Set<String> _checkedItemIds =
+      {}; // Storing IDs instead of names for Firebase
+  late final Stream<QuerySnapshot> _restaurantsStream;
+  late final Stream<QuerySnapshot> _menuItemsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _restaurantsStream = FirebaseFirestore.instance
+        .collection('restaurants')
+        .snapshots();
+    _menuItemsStream = FirebaseFirestore.instance
+        .collection('menu_items')
+        .snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +40,14 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Select Meal", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Select Meal",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
+        stream: _restaurantsStream,
         builder: (context, snapshotR) {
           if (snapshotR.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -44,27 +61,40 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
               .toList();
 
           return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('menu_items').snapshots(),
+            stream: _menuItemsStream,
             builder: (context, snapshotM) {
               if (snapshotM.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              List<MenuItemModel> allMeals = snapshotM.data?.docs
-                  .map((doc) => MenuItemModel.fromFirestore(doc))
-                  .toList() ?? [];
+              List<MenuItemModel> allMeals =
+                  snapshotM.data?.docs
+                      .map((doc) => MenuItemModel.fromFirestore(doc))
+                      .toList() ??
+                  [];
 
               return Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey[200]!),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text("CAMPUS DINING", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                        const Text(
+                          "CAMPUS DINING",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -82,19 +112,36 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
                                   });
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isSelected ? Colors.white : Colors.transparent,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(16),
-                                    boxShadow: isSelected 
-                                        ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(
+                                                0.05,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
                                         : [],
                                   ),
                                   child: Text(
                                     type,
                                     style: TextStyle(
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                      color: isSelected ? Colors.black : Colors.grey[600],
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.black
+                                          : Colors.grey[600],
                                     ),
                                   ),
                                 ),
@@ -112,9 +159,12 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
                       itemCount: restaurants.length,
                       itemBuilder: (context, index) {
                         final restaurant = restaurants[index];
-                        final restaurantMenu = allMeals.where((m) => m.restaurantId == restaurant.id).toList();
+                        final restaurantMenu = allMeals
+                            .where((m) => m.restaurantId == restaurant.id)
+                            .toList();
 
-                        if (restaurantMenu.isEmpty) return const SizedBox.shrink();
+                        if (restaurantMenu.isEmpty)
+                          return const SizedBox.shrink();
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,19 +172,35 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
                             Container(
                               width: double.infinity,
                               color: Colors.grey[50],
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 12.0,
+                              ),
                               child: Text(
                                 restaurant.name,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.black87),
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.black87,
+                                ),
                               ),
                             ),
                             ...restaurantMenu.map((item) {
-                              bool isChecked = _checkedItemIds.contains(item.id);
+                              bool isChecked = _checkedItemIds.contains(
+                                item.id,
+                              );
                               return CheckboxListTile(
-                                title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                title: Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                                 value: isChecked,
                                 activeColor: Colors.redAccent,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
                                 onChanged: (bool? value) {
                                   setState(() {
                                     if (value == true) {
@@ -157,52 +223,67 @@ class _SelectMealScreenState extends State<SelectMealScreen> {
           );
         },
       ),
-      
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _checkedItemIds.isNotEmpty 
-        ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton(
-                onPressed: () async {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saving meal...')));
-                  
-                  // Save all selected items as Meal Logs
-                  for (String itemId in _checkedItemIds) {
-                    final newLog = MealLogModel(
-                      id: '',
-                      userId: 'user_1', // Mocked user
-                      menuItemId: itemId,
-                      date: DateTime.now(),
-                      mealType: _selectedMealType,
-                      rating: 0,
-                      personalNote: '',
-                      photoUrl: '',
-                    );
-                    await FirebaseFirestore.instance.collection('meal_logs').add(newLog.toMap());
-                  }
 
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added ${_checkedItemIds.length} items to $_selectedMealType!')));
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
-                ),
-                child: Text(
-                  "Add to $_selectedMealType", 
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: _checkedItemIds.isNotEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Saving meal...')),
+                    );
+
+                    // Save all selected items as Meal Logs
+                    for (String itemId in _checkedItemIds) {
+                      final newLog = MealLogModel(
+                        id: '',
+                        userId: 'user_1', // Mocked user
+                        menuItemId: itemId,
+                        date: DateTime.now(),
+                        mealType: _selectedMealType,
+                        rating: 0,
+                        personalNote: '',
+                        photoUrl: '',
+                      );
+                      await FirebaseFirestore.instance
+                          .collection('meal_logs')
+                          .add(newLog.toMap());
+                    }
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Added ${_checkedItemIds.length} items to $_selectedMealType!',
+                          ),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: Text(
+                    "Add to $_selectedMealType",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          )
-        : null,
+            )
+          : null,
     );
   }
 }
