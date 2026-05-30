@@ -56,37 +56,32 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       
       final dishName = widget.dish.name;
 
-      // Prompt template explicitly handling country-specific food matching
-      var prompt = 'Provide a short, highly appetizing description for a dish named "$dishName". '
-          'Additionally, since the user is from $userCountry, recommend a similar food or equivalent option '
-          'that exists in $userCountry cuisine to help them understand what it tastes like.';
+      // Prompt template focused on objective, basic information in Korean
+      var prompt = '당신은 대학교 학생식당 메뉴를 설명해주는 정보 도우미입니다. '
+          '"$dishName"이라는 음식에 대해 사람들이 검색했을 때 나오는 객관적이고 기본적인 정보를 짧고 명확하게 설명해주세요. '
+          '주의: "우리 셰프가 정성껏 만든", "저희 레스토랑의" 같은 거창한 식당 홍보 멘트나 수식어는 절대 쓰지 마세요. '
+          '모든 답변은 반드시 자연스러운 한국어(Korean)로만 작성하세요.';
 
       // Add spice tolerance custom logic
-      prompt += ' The user has a spice tolerance of "$spiceTolerance". '
-          'Identify if the dish is spicy. If it is spicier than their tolerance, warn them clearly; '
-          'otherwise, let them know it fits their spice preference.';
+      prompt += ' 사용자의 매운맛 선호도는 "$spiceTolerance"입니다. '
+          '이 음식이 매운 편인지 객관적으로 알려주고, 사용자의 선호도에 맞을지 짧게 언급해주세요.';
 
       // Add allergy/dietary custom logic
       if (dietaryLabels.isNotEmpty || allergies.isNotEmpty) {
-        prompt += ' IMPORTANT: The user has the following dietary guidelines: '
-            'Dietary labels: ${dietaryLabels.join(", ")}, Allergies: ${allergies.join(", ")}. '
-            'If the dish "$dishName" violates these (e.g., contains peanuts if they are allergic, or is non-halal if they require halal), '
-            'prominently place a clear caution/warning at the very beginning of the response. Otherwise, note that it conforms to their restrictions.';
+        prompt += ' 중요: 사용자는 다음의 식단/알레르기 정보가 있습니다: '
+            '식단: ${dietaryLabels.join(", ")}, 알레르기: ${allergies.join(", ")}. '
+            '만약 "$dishName"에 이와 충돌하는 성분(예: 땅콩 알레르기가 있는데 땅콩이 들어감 등)이 포함될 가능성이 있다면 가장 먼저 강력하게 경고해주세요. '
+            '문제가 없다면 안전하다고 알려주세요.';
       }
 
       // Add flavor preference custom logic
       if (preferredTastes.isNotEmpty) {
-        prompt += ' The user prefers these flavor notes: ${preferredTastes.join(", ")}. '
-            'Highlight how this dish matches or fits these favorite flavor profiles.';
+        prompt += ' 사용자가 선호하는 맛: ${preferredTastes.join(", ")}. '
+            '이 음식이 사용자가 선호하는 맛과 어떻게 잘 맞는지 객관적으로 짧게 설명해주세요.';
       }
 
-      // Instruct Gemini to write the response strictly in the preferred language
-      prompt += ' The user\'s preferred language is "$preferredLanguage". '
-          'You MUST write the entire description, food comparison, warnings, and flavor notes in "$preferredLanguage" only. '
-          'If the preferred language is Korean, output exclusively in Korean. If the preferred language is English, output exclusively in English.';
-
       // Instruct Gemini to output raw, clean, highly readable plain text paragraphs only without any markdown formatting
-      prompt += ' CRITICAL FORMATTING REQUIREMENT: Do NOT use any Markdown formatting, bold symbols (like asterisks like **), bullet points (- or *), headings (#), or list symbols. Return the response as raw, clean, highly readable plain text paragraphs only. Ensure no special formatting characters appear in the output.';
+      prompt += ' 텍스트 포맷 규칙: 마크다운 기호(*, **, #, - 등)를 절대 사용하지 마세요. 기호 없이 깔끔하고 읽기 편한 순수 텍스트(Plain text) 줄글로만 답변을 제공하세요.';
       
       final response = await model.generateContent([Content.text(prompt)]);
 
