@@ -517,28 +517,29 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             },
           ),
           const Divider(height: 1, indent: 60),
-          SwitchListTile(
-            secondary: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.teal[50],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.language,
-                color: Colors.teal[600],
-                size: 20,
-              ),
-            ),
-            title: Text(
-              LocalizationService.tr('language_setting'),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            subtitle: Text(LocalizationService.tr('language_toggle')),
-            value: LocalizationService.currentLanguage.value == 'ko',
-            activeColor: Colors.teal[600],
-            onChanged: (bool value) {
-              LocalizationService.toggleLanguage();
+          ValueListenableBuilder<String>(
+            valueListenable: LocalizationService.currentLanguage,
+            builder: (context, lang, child) {
+              return SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.teal[50],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.language, color: Colors.teal[600]),
+                ),
+                title: Text(
+                  LocalizationService.tr('language_setting'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                subtitle: Text(LocalizationService.tr('language_toggle')),
+                value: lang == 'ko',
+                activeColor: Colors.teal[600],
+                onChanged: (bool value) {
+                  LocalizationService.toggleLanguage();
+                },
+              );
             },
           ),
 

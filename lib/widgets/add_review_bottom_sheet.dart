@@ -5,7 +5,11 @@ import '../models/models.dart';
 import '../services/localization.dart';
 import 'dart:io';
 
-void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String? imagePath}) {
+void showAddReviewBottomSheet(
+  BuildContext context,
+  MenuItemModel dish, {
+  String? imagePath,
+}) {
   String? localImagePath = imagePath;
   int localRating = 5;
   String selectedMealType = "Lunch";
@@ -37,13 +41,20 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                     child: Container(
                       width: 48,
                       height: 5,
-                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     LocalizationService.tr('add_log_title'),
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -69,24 +80,40 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                     child: TextButton.icon(
                       onPressed: () async {
                         final picker = ImagePicker();
-                        final photo = await picker.pickImage(source: ImageSource.gallery);
+                        final photo = await picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
                         if (photo != null) {
                           setModalState(() {
                             localImagePath = photo.path;
                           });
                         }
                       },
-                      icon: const Icon(Icons.add_a_photo, color: Color(0xFFE94E5D)),
+                      icon: const Icon(
+                        Icons.add_a_photo,
+                        color: Color(0xFFE94E5D),
+                      ),
                       label: Text(
-                        localImagePath == null ? LocalizationService.tr('add_photo') : LocalizationService.tr('change_photo'),
-                        style: const TextStyle(color: Color(0xFFE94E5D), fontWeight: FontWeight.bold),
+                        localImagePath == null
+                            ? LocalizationService.tr('add_photo')
+                            : LocalizationService.tr('change_photo'),
+                        style: const TextStyle(
+                          color: Color(0xFFE94E5D),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 10),
 
                   // Meal Type
-                  Text(LocalizationService.tr('meal_type'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text(
+                    LocalizationService.tr('meal_type'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Row(
                     children: ["Breakfast", "Lunch", "Dinner"].map((type) {
@@ -115,7 +142,13 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                   const SizedBox(height: 20),
 
                   // Rating
-                  Text(LocalizationService.tr('rating'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text(
+                    LocalizationService.tr('rating'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Row(
                     children: List.generate(5, (index) {
@@ -129,8 +162,12 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: Icon(
-                            star <= localRating ? Icons.star_rounded : Icons.star_border_rounded,
-                            color: star <= localRating ? Colors.amber : Colors.grey[300],
+                            star <= localRating
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            color: star <= localRating
+                                ? Colors.amber
+                                : Colors.grey[300],
                             size: 40,
                           ),
                         ),
@@ -140,7 +177,13 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                   const SizedBox(height: 20),
 
                   // Review text
-                  Text(LocalizationService.tr('write_a_review'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text(
+                    LocalizationService.tr('write_a_review'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: noteController,
@@ -150,7 +193,10 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                       hintStyle: TextStyle(color: Colors.grey[400]),
                       filled: true,
                       fillColor: const Color(0xFFF3F4F6),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
                       contentPadding: const EdgeInsets.all(16),
                     ),
                   ),
@@ -164,19 +210,27 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                       onPressed: () async {
                         Navigator.pop(bc);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Saving your meal log & review...")),
+                          const SnackBar(
+                            content: Text("Saving your meal log & review..."),
+                          ),
                         );
 
-                        final String userReviewText = noteController.text.trim();
-                        final String originalText = userReviewText.isNotEmpty ? userReviewText : "Delicious!";
+                        final String userReviewText = noteController.text
+                            .trim();
+                        final String originalText = userReviewText.isNotEmpty
+                            ? userReviewText
+                            : "Delicious!";
 
                         // Generate mock translation for bilingual users
-                        final String translatedText = originalText == "Delicious!"
+                        final String translatedText =
+                            originalText == "Delicious!"
                             ? "Delicious!"
                             : "Translation: $originalText";
 
                         // 1. Add review
-                        final reviewDocRef = FirebaseFirestore.instance.collection('reviews').doc();
+                        final reviewDocRef = FirebaseFirestore.instance
+                            .collection('reviews')
+                            .doc();
                         final newReview = ReviewModel(
                           id: reviewDocRef.id,
                           userId: 'user_1',
@@ -185,12 +239,14 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                           originalReview: originalText,
                           translatedReview: translatedText,
                           datePosted: DateTime.now(),
-                          backgroundImageUrl: localImagePath ?? dish.imageUrl, 
+                          backgroundImageUrl: localImagePath ?? dish.imageUrl,
                         );
                         await reviewDocRef.set(newReview.toMap());
 
                         // 2. Add meal log
-                        final logDocRef = FirebaseFirestore.instance.collection('meal_logs').doc();
+                        final logDocRef = FirebaseFirestore.instance
+                            .collection('meal_logs')
+                            .doc();
                         final newLog = MealLogModel(
                           id: logDocRef.id,
                           userId: 'user_1',
@@ -204,24 +260,36 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                         await logDocRef.set(newLog.toMap());
 
                         // 3. Update User's Review Count
-                        final userRef = FirebaseFirestore.instance.collection('users').doc('user_1');
+                        final userRef = FirebaseFirestore.instance
+                            .collection('users')
+                            .doc('user_1');
                         await userRef.set({
-                          'reviewCount': FieldValue.increment(1)
+                          'reviewCount': FieldValue.increment(1),
                         }, SetOptions(merge: true));
 
                         // 4. Update restaurant and menu item stats in Transaction
-                        final dishRef = FirebaseFirestore.instance.collection('menu_items').doc(dish.id);
-                        await FirebaseFirestore.instance.runTransaction((transaction) async {
+                        final dishRef = FirebaseFirestore.instance
+                            .collection('menu_items')
+                            .doc(dish.id);
+                        await FirebaseFirestore.instance.runTransaction((
+                          transaction,
+                        ) async {
                           final freshSnap = await transaction.get(dishRef);
                           if (freshSnap.exists) {
-                            final currentRating = freshSnap.get('averageRating') ?? 0.0;
-                            final currentCount = freshSnap.get('reviewCount') ?? 0;
+                            final currentRating =
+                                freshSnap.get('averageRating') ?? 0.0;
+                            final currentCount =
+                                freshSnap.get('reviewCount') ?? 0;
 
                             final newCount = currentCount + 1;
-                            final newRating = ((currentRating * currentCount) + localRating) / newCount;
+                            final newRating =
+                                ((currentRating * currentCount) + localRating) /
+                                newCount;
 
                             transaction.update(dishRef, {
-                              'averageRating': double.parse(newRating.toStringAsFixed(1)),
+                              'averageRating': double.parse(
+                                newRating.toStringAsFixed(1),
+                              ),
                               'reviewCount': newCount,
                             });
                           }
@@ -230,7 +298,9 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("Successfully logged meal and posted review! 🎉"),
+                              content: Text(
+                                "Successfully logged meal and posted review! 🎉",
+                              ),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -239,12 +309,18 @@ void showAddReviewBottomSheet(BuildContext context, MenuItemModel dish, {String?
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE94E5D),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 0,
                       ),
                       child: Text(
                         LocalizationService.tr('submit_review'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

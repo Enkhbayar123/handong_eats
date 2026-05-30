@@ -24,8 +24,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _restaurantsStream = FirebaseFirestore.instance.collection('restaurants').snapshots();
-    _menuItemsStream = FirebaseFirestore.instance.collection('menu_items').snapshots();
+    _restaurantsStream = FirebaseFirestore.instance
+        .collection('restaurants')
+        .snapshots();
+    _menuItemsStream = FirebaseFirestore.instance
+        .collection('menu_items')
+        .snapshots();
     _mealLogsStream = FirebaseFirestore.instance
         .collection('meal_logs')
         .where('userId', isEqualTo: 'user_1')
@@ -33,25 +37,43 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   bool _hasLunch(DateTime date, List<MealLogModel> logs) {
-    return logs.any((log) => log.mealType == "Lunch" && isSameDay(log.date, date));
+    return logs.any(
+      (log) => log.mealType == "Lunch" && isSameDay(log.date, date),
+    );
   }
 
   bool _hasDinner(DateTime date, List<MealLogModel> logs) {
-    return logs.any((log) => log.mealType == "Dinner" && isSameDay(log.date, date));
+    return logs.any(
+      (log) => log.mealType == "Dinner" && isSameDay(log.date, date),
+    );
   }
 
   bool _hasBreakfast(DateTime date, List<MealLogModel> logs) {
-    return logs.any((log) => log.mealType == "Breakfast" && isSameDay(log.date, date));
+    return logs.any(
+      (log) => log.mealType == "Breakfast" && isSameDay(log.date, date),
+    );
   }
 
   bool isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year && date1.month == date2.month && date1.day == date2.day;
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   String _getMonthYear(DateTime date) {
     const List<String> months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     return "${months[date.month - 1]} ${date.year}";
   }
@@ -62,33 +84,57 @@ class _CalendarScreenState extends State<CalendarScreen> {
       stream: _restaurantsStream,
       builder: (context, snapshotR) {
         if (snapshotR.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
-        final restaurants = snapshotR.data?.docs.map((doc) => RestaurantModel.fromFirestore(doc)).toList() ?? [];
+        final restaurants =
+            snapshotR.data?.docs
+                .map((doc) => RestaurantModel.fromFirestore(doc))
+                .toList() ??
+            [];
 
         return StreamBuilder<QuerySnapshot>(
           stream: _menuItemsStream,
           builder: (context, snapshotM) {
             if (snapshotM.connectionState == ConnectionState.waiting) {
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
             }
-            final allMeals = snapshotM.data?.docs.map((doc) => MenuItemModel.fromFirestore(doc)).toList() ?? [];
+            final allMeals =
+                snapshotM.data?.docs
+                    .map((doc) => MenuItemModel.fromFirestore(doc))
+                    .toList() ??
+                [];
 
             return StreamBuilder<QuerySnapshot>(
               stream: _mealLogsStream,
               builder: (context, snapshotL) {
                 if (snapshotL.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
                 }
-                final logs = snapshotL.data?.docs.map((doc) => MealLogModel.fromFirestore(doc)).toList() ?? [];
-                final todaysLogs = logs.where((log) => isSameDay(log.date, _selectedDate)).toList();
+                final logs =
+                    snapshotL.data?.docs
+                        .map((doc) => MealLogModel.fromFirestore(doc))
+                        .toList() ??
+                    [];
+                final todaysLogs = logs
+                    .where((log) => isSameDay(log.date, _selectedDate))
+                    .toList();
 
                 return Scaffold(
                   backgroundColor: const Color(0xFFF8F9FB),
                   appBar: AppBar(
                     title: Text(
                       LocalizationService.tr('calendar_title'),
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 24,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
@@ -158,7 +204,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             bool hasB = _hasBreakfast(date, logs);
             bool hasL = _hasLunch(date, logs);
             bool hasD = _hasDinner(date, logs);
-            
+
             if (!hasB && !hasL && !hasD) return null;
 
             return Positioned(
@@ -183,16 +229,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 1.0),
       width: 5,
       height: 5,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
   // --- COMPONENT 2: My Plate (User's Logs) ---
   Widget _buildMyPlateSection(
-      List<MealLogModel> todaysLogs, List<MenuItemModel> allMeals, List<RestaurantModel> restaurants) {
+    List<MealLogModel> todaysLogs,
+    List<MenuItemModel> allMeals,
+    List<RestaurantModel> restaurants,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
@@ -203,16 +249,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
             children: [
               Row(
                 children: [
-                  Text(LocalizationService.tr('my_plate'), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(
+                    LocalizationService.tr('my_plate'),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Text(
                       "${todaysLogs.length} ENTRIES",
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF4B5563)),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF4B5563),
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
               IconButton(
@@ -225,8 +287,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.add_circle_rounded, color: Color(0xFFE94E5D), size: 30),
-              )
+                icon: const Icon(
+                  Icons.add_circle_rounded,
+                  color: Color(0xFFE94E5D),
+                  size: 30,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -242,24 +308,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.restaurant_outlined, color: Colors.grey[300], size: 48),
+                    Icon(
+                      Icons.restaurant_outlined,
+                      color: Colors.grey[300],
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       "No meals logged on this date.",
-                      style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
             )
           else
-            ...todaysLogs.map((log) => _buildLogCard(log, allMeals, restaurants)),
+            ...todaysLogs.map(
+              (log) => _buildLogCard(log, allMeals, restaurants),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildLogCard(MealLogModel log, List<MenuItemModel> allMeals, List<RestaurantModel> restaurants) {
+  Widget _buildLogCard(
+    MealLogModel log,
+    List<MenuItemModel> allMeals,
+    List<RestaurantModel> restaurants,
+  ) {
     // Resolve dish name & restaurant name
     final meal = allMeals.firstWhere(
       (m) => m.id == log.menuItemId,
@@ -301,7 +380,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     // Format log time (e.g. 12:45 PM)
-    final timeStr = "${log.date.hour > 12 ? log.date.hour - 12 : log.date.hour}:${log.date.minute.toString().padLeft(2, '0')} ${log.date.hour >= 12 ? 'PM' : 'AM'}";
+    final timeStr =
+        "${log.date.hour > 12 ? log.date.hour - 12 : log.date.hour}:${log.date.minute.toString().padLeft(2, '0')} ${log.date.hour >= 12 ? 'PM' : 'AM'}";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -313,7 +393,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Padding(
@@ -347,29 +427,45 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       Text(
                         timeStr,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     meal.name,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     rest.name,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   if (log.personalNote.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
                       "Note: ${log.personalNote}",
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey[700]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey[700],
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -392,9 +488,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                 );
               },
-              icon: const Icon(Icons.edit_outlined, color: Colors.grey, size: 20),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.grey,
+                size: 20,
+              ),
               splashRadius: 20,
-            )
+            ),
           ],
         ),
       ),
@@ -408,15 +508,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Campus Menu Archive", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+            "Campus Menu Archive",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Text(
             "Viewing menus offered on ${_selectedDate.month}/${_selectedDate.day}",
-            style: TextStyle(color: Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildArchiveRestaurantCard("Mom's Kitchen", "Classic Bibimbap, Handmade Tonkatsu"),
-          _buildArchiveRestaurantCard("Student Lounge (Sola Fide)", "Spicy Pork Bowl, Tuna Mayo Rice"),
+          _buildArchiveRestaurantCard(
+            "Mom's Kitchen",
+            "Classic Bibimbap, Handmade Tonkatsu",
+          ),
+          _buildArchiveRestaurantCard(
+            "Student Lounge (Sola Fide)",
+            "Spicy Pork Bowl, Tuna Mayo Rice",
+          ),
           _buildArchiveRestaurantCard("Dasu Handong", "Kimchi Jjigae"),
         ],
       ),
@@ -441,13 +554,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
           border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          title: Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
           subtitle: Text(
             menuPreview,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
           ),
           trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         ),

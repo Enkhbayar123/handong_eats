@@ -62,5 +62,7 @@ class _MainNavigationState extends State<MainNavigation> {
         onTap: _onItemTapped,
       ),
     );
+      },
+    );
   }
 }
