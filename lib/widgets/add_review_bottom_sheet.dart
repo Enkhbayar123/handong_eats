@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/models.dart';
 import '../services/localization.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 
 void showAddReviewBottomSheet(
@@ -221,11 +222,20 @@ void showAddReviewBottomSheet(
                             ? userReviewText
                             : "Delicious!";
 
-                        // Generate mock translation for bilingual users
-                        final String translatedText =
-                            originalText == "Delicious!"
-                            ? "Delicious!"
-                            : "Translation: $originalText";
+                        String translatedText = originalText;
+                        try {
+                          final apiKey = const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+                          if (apiKey.isNotEmpty) {
+                            final model = GenerativeModel(model: 'gemini-flash-latest', apiKey: apiKey);
+                            final prompt = 'Translate the following review to English if it is in Korean, or to Korean if it is in English. Keep the meaning and tone intact. Review: "$originalText"';
+                            final response = await model.generateContent([Content.text(prompt)]);
+                            if (response.text != null && response.text!.isNotEmpty) {
+                              translatedText = response.text!.trim();
+                            }
+                          }
+                        } catch (e) {
+                          debugPrint('Gemini Translation Error: $e');
+                        }
 
                         // 1. Add review
                         final reviewDocRef = FirebaseFirestore.instance
