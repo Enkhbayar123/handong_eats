@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import '../widgets/tier_badge.dart';
 
 class ReviewDetailScreen extends StatefulWidget {
   final String username;
@@ -7,7 +9,9 @@ class ReviewDetailScreen extends StatefulWidget {
   final String date;
   final String originalReview;
   final String translatedReview;
-  final String? backgroundImageUrl; // Optional, in case they didn't upload a photo
+  final int userReviewCount;
+  final String?
+  backgroundImageUrl; // Optional, in case they didn't upload a photo
 
   const ReviewDetailScreen({
     super.key,
@@ -17,6 +21,7 @@ class ReviewDetailScreen extends StatefulWidget {
     required this.date,
     required this.originalReview,
     required this.translatedReview,
+    required this.userReviewCount,
     this.backgroundImageUrl,
   });
 
@@ -36,17 +41,33 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
         children: [
           // --- LAYER 1: Background Wallpaper ---
           if (widget.backgroundImageUrl != null)
-            Image.network(
-              widget.backgroundImageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.grey[900],
-                child: const Icon(Icons.broken_image, color: Colors.white24, size: 50),
-              ),
-            )
+            widget.backgroundImageUrl!.startsWith('http')
+                ? Image.network(
+                    widget.backgroundImageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[900],
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.white24,
+                        size: 50,
+                      ),
+                    ),
+                  )
+                : Image.file(
+                    File(widget.backgroundImageUrl!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[900],
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.white24,
+                        size: 50,
+                      ),
+                    ),
+                  )
           else
             Container(color: Colors.grey[900]), // Dark background if no photo
-
           // --- LAYER 2: Dark Gradient Overlay ---
           // This ensures the white text is always readable against any photo
           Container(
@@ -75,13 +96,15 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                   Align(
                     alignment: Alignment.topLeft,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  
-                  const Spacer(), // Pushes everything below to the bottom of the screen
 
+                  const Spacer(), // Pushes everything below to the bottom of the screen
                   // User Profile Row
                   Row(
                     children: [
@@ -94,13 +117,35 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            widget.username,
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          Row(
+                            children: [
+                              Text(
+                                widget.username,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Theme(
+                                data: Theme.of(context).copyWith(
+                                  iconTheme: const IconThemeData(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                child: TierBadge(
+                                  reviewCount: widget.userReviewCount,
+                                ),
+                              ),
+                            ],
                           ),
                           Text(
                             widget.date,
-                            style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
@@ -113,7 +158,9 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                     children: List.generate(5, (index) {
                       return Icon(
                         Icons.star_rounded,
-                        color: index < widget.rating ? Colors.amber : Colors.grey[600],
+                        color: index < widget.rating
+                            ? Colors.amber
+                            : Colors.grey[600],
                         size: 20,
                       );
                     }),
@@ -122,10 +169,16 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
 
                   // Review Text (Toggles between Original and Translated)
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300), // Smooth fade transition
+                    duration: const Duration(
+                      milliseconds: 300,
+                    ), // Smooth fade transition
                     child: Text(
-                      _isTranslated ? widget.translatedReview : widget.originalReview,
-                      key: ValueKey<bool>(_isTranslated), // Tells Flutter to animate the change
+                      _isTranslated
+                          ? widget.translatedReview
+                          : widget.originalReview,
+                      key: ValueKey<bool>(
+                        _isTranslated,
+                      ), // Tells Flutter to animate the change
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -154,7 +207,9 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                       _isTranslated ? Icons.check : Icons.g_translate,
                       size: 18,
                     ),
-                    label: Text(_isTranslated ? "Show Original" : "Translate to English"),
+                    label: Text(
+                      _isTranslated ? "Show Original" : "Translate to English",
+                    ),
                   ),
                   const SizedBox(height: 20), // Extra padding at the bottom
                 ],

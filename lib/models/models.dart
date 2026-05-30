@@ -16,6 +16,7 @@ class UserModel {
   final String spiceTolerance;
   final List<String> preferredTastes;
   final String preferredLanguage;
+  final int reviewCount;
 
   UserModel({
     required this.uid,
@@ -31,6 +32,7 @@ class UserModel {
     this.spiceTolerance = 'Medium',
     this.preferredTastes = const [],
     this.preferredLanguage = 'English',
+    this.reviewCount = 0,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -49,6 +51,7 @@ class UserModel {
       spiceTolerance: data['spiceTolerance'] ?? 'Medium',
       preferredTastes: List<String>.from(data['preferredTastes'] ?? []),
       preferredLanguage: data['preferredLanguage'] ?? 'English',
+      reviewCount: data['reviewCount'] ?? 0,
     );
   }
 
@@ -66,6 +69,7 @@ class UserModel {
       'spiceTolerance': spiceTolerance,
       'preferredTastes': preferredTastes,
       'preferredLanguage': preferredLanguage,
+      'reviewCount': reviewCount,
     };
   }
 }

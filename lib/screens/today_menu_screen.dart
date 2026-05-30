@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dish_detail_screen.dart';
 import '../models/models.dart';
+import '../services/localization.dart';
 
 class TodayMenuScreen extends StatefulWidget {
   const TodayMenuScreen({super.key});
@@ -12,32 +13,49 @@ class TodayMenuScreen extends StatefulWidget {
 
 class _TodayMenuScreenState extends State<TodayMenuScreen> {
   int _selectedRestaurantIndex = 0;
+  late final Stream<QuerySnapshot> _restaurantsStream;
+  late final Stream<QuerySnapshot> _menuItemsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _restaurantsStream = FirebaseFirestore.instance
+        .collection('restaurants')
+        .snapshots();
+    _menuItemsStream = FirebaseFirestore.instance
+        .collection('menu_items')
+        .snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
-        title: const Text(
-          "Today's Menu",
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24, letterSpacing: -0.5),
+        title: Text(
+          LocalizationService.tr("today_title"),
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 24,
+            letterSpacing: -0.5,
+          ),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
+        stream: _restaurantsStream,
         builder: (context, snapshotR) {
           if (snapshotR.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshotR.hasData || snapshotR.data!.docs.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                "No restaurants found.\nThe database is empty or still initializing.",
+                LocalizationService.tr("no_restaurants"),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+                style: const TextStyle(color: Colors.grey, fontSize: 16),
               ),
             );
           }
@@ -51,33 +69,39 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
           }
 
           return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('menu_items').snapshots(),
+            stream: _menuItemsStream,
             builder: (context, snapshotM) {
               if (snapshotM.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              List<MenuItemModel> allMeals = snapshotM.data?.docs
+              List<MenuItemModel> allMeals =
+                  snapshotM.data?.docs
                       .map((doc) => MenuItemModel.fromFirestore(doc))
                       .toList() ??
                   [];
 
               // Compute podium (Top 3 rated items)
               List<MenuItemModel> sortedMeals = List.from(allMeals);
-              sortedMeals.sort((a, b) => b.averageRating.compareTo(a.averageRating));
+              sortedMeals.sort(
+                (a, b) => b.averageRating.compareTo(a.averageRating),
+              );
               List<MenuItemModel> podiumMeals = sortedMeals.take(3).toList();
 
               // Get active restaurant's meals
-              RestaurantModel activeRestaurant = restaurants[_selectedRestaurantIndex];
-              List<MenuItemModel> activeMenu =
-                  allMeals.where((m) => m.restaurantId == activeRestaurant.id).toList();
+              RestaurantModel activeRestaurant =
+                  restaurants[_selectedRestaurantIndex];
+              List<MenuItemModel> activeMenu = allMeals
+                  .where((m) => m.restaurantId == activeRestaurant.id)
+                  .toList();
 
               return SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (podiumMeals.isNotEmpty) _buildPodiumSection(podiumMeals),
+                    if (podiumMeals.isNotEmpty)
+                      _buildPodiumSection(podiumMeals),
                     if (podiumMeals.isNotEmpty) const SizedBox(height: 24),
                     _buildRestaurantFilter(restaurants),
                     const SizedBox(height: 20),
@@ -102,9 +126,13 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
           padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 12.0),
           child: Row(
             children: [
-              const Text(
-                "Today's Podium",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+              Text(
+                LocalizationService.tr("todays_podium"),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
               const SizedBox(width: 8),
               Container(
@@ -113,14 +141,22 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.local_fire_department_rounded, color: Colors.amber, size: 16),
-                    SizedBox(width: 4),
+                    const Icon(
+                      Icons.local_fire_department_rounded,
+                      color: Colors.amber,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      "HOT",
-                      style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w800),
-                    )
+                      LocalizationService.tr("hot"),
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -165,7 +201,10 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => DishDetailScreen(dish: meal)),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DishDetailScreen(dish: meal),
+                              ),
                             );
                           },
                           child: Container(
@@ -187,7 +226,10 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                                 meal.imageUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    Container(color: Colors.grey[300], child: const Icon(Icons.restaurant)),
+                                    Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.restaurant),
+                                    ),
                               ),
                             ),
                           ),
@@ -207,7 +249,7 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                                   color: Colors.black.withOpacity(0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
-                                )
+                                ),
                               ],
                             ),
                             child: Center(
@@ -221,7 +263,7 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                               ),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -239,11 +281,19 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Colors.amber,
+                          size: 16,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           meal.averageRating.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                         ),
                       ],
                     ),
@@ -287,7 +337,9 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected ? Colors.transparent : const Color(0xFFE5E7EB),
+                  color: isSelected
+                      ? Colors.transparent
+                      : const Color(0xFFE5E7EB),
                 ),
               ),
               labelStyle: TextStyle(
@@ -303,7 +355,10 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
   }
 
   // --- MENU LISTING (Modern cards with details) ---
-  Widget _buildMenuListing(RestaurantModel activeRestaurant, List<MenuItemModel> activeMenu) {
+  Widget _buildMenuListing(
+    RestaurantModel activeRestaurant,
+    List<MenuItemModel> activeMenu,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
@@ -319,7 +374,11 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                   children: [
                     Text(
                       activeRestaurant.name,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1E293B),
+                      ),
                     ),
                     const SizedBox(height: 6),
                     _buildStatusBadge(activeRestaurant),
@@ -327,7 +386,10 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(12),
@@ -335,7 +397,11 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                 ),
                 child: Text(
                   "${activeRestaurant.openTime} - ${activeRestaurant.closeTime}",
-                  style: const TextStyle(color: Color(0xFF047857), fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Color(0xFF047857),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -350,10 +416,13 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  "No items available today.",
-                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                  LocalizationService.tr("no_items_available"),
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -396,12 +465,16 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                             width: 90,
                             height: 90,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 90,
-                              height: 90,
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.fastfood, color: Colors.grey),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 90,
+                                  height: 90,
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.fastfood,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -430,14 +503,21 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFFEF3C7),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                        const Icon(
+                                          Icons.star_rounded,
+                                          color: Colors.amber,
+                                          size: 14,
+                                        ),
                                         const SizedBox(width: 3),
                                         Text(
                                           item.averageRating.toString(),
@@ -460,7 +540,7 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                                     ),
                                   ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -471,15 +551,19 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                             color: Color(0xFFF3F4F6),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.chevron_right_rounded, color: Colors.black54, size: 20),
-                        )
+                          child: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.black54,
+                            size: 20,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
               );
             },
-          )
+          ),
         ],
       ),
     );
@@ -542,7 +626,11 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.edit_outlined, size: 11, color: textColor.withOpacity(0.6)),
+            Icon(
+              Icons.edit_outlined,
+              size: 11,
+              color: textColor.withOpacity(0.6),
+            ),
           ],
         ),
       ),
@@ -564,12 +652,18 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
               Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               const SizedBox(height: 20),
               Text(
                 "How is the line at ${restaurant.name}?",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
@@ -613,14 +707,21 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     );
   }
 
-  Widget _buildReportOption(BuildContext context, RestaurantModel restaurant, String label, IconData icon,
-      MaterialColor color, CrowdedStatus status) {
+  Widget _buildReportOption(
+    BuildContext context,
+    RestaurantModel restaurant,
+    String label,
+    IconData icon,
+    MaterialColor color,
+    CrowdedStatus status,
+  ) {
     return InkWell(
       onTap: () async {
         Navigator.pop(context);
-        await FirebaseFirestore.instance.collection('restaurants').doc(restaurant.id).update({
-          'currentStatus': status.name,
-        });
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(restaurant.id)
+            .update({'currentStatus': status.name});
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -628,7 +729,9 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
               content: const Text("Thank you for updating the line status! 👏"),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.black87,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               duration: const Duration(seconds: 2),
             ),
           );
