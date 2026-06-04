@@ -1129,42 +1129,37 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  name,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              TierBadge(
-                                                reviewCount: userReviewCount,
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            children: List.generate(
-                                              5,
-                                              (idx) => Icon(
-                                                Icons.star_rounded,
-                                                color: idx < review.rating
-                                                    ? Colors.amber
-                                                    : Colors.grey[300],
-                                                size: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                       Row(
+                                         children: [
+                                           Flexible(
+                                             child: Text(
+                                               name,
+                                               style: const TextStyle(
+                                                 fontWeight: FontWeight.bold,
+                                                 fontSize: 14,
+                                               ),
+                                               overflow: TextOverflow.ellipsis,
+                                             ),
+                                           ),
+                                           const SizedBox(width: 8),
+                                           TierBadge(
+                                             reviewCount: userReviewCount,
+                                           ),
+                                         ],
+                                       ),
+                                       const SizedBox(height: 4),
+                                       Row(
+                                         children: List.generate(
+                                           5,
+                                           (idx) => Icon(
+                                             Icons.star_rounded,
+                                             color: idx < review.rating
+                                                 ? Colors.amber
+                                                 : Colors.grey[300],
+                                             size: 14,
+                                           ),
+                                         ),
+                                       ),
                                   ],
                                 ),
                               ),
