@@ -6,6 +6,7 @@ import '../services/localization.dart';
 import '../services/auth_service.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
+import '../services/image_uploader.dart';
 
 void showAddReviewBottomSheet(
   BuildContext context,
@@ -238,6 +239,14 @@ void showAddReviewBottomSheet(
                           debugPrint('Gemini Translation Error: $e');
                         }
 
+                        String reviewImageUrl = dish.imageUrl;
+                        if (localImagePath != null) {
+                          final uploadedUrl = await ImageUploader.uploadImage(localImagePath!);
+                          if (uploadedUrl != null) {
+                            reviewImageUrl = uploadedUrl;
+                          }
+                        }
+
                         // 1. Add review
                         final reviewDocRef = FirebaseFirestore.instance
                             .collection('reviews')
@@ -250,7 +259,7 @@ void showAddReviewBottomSheet(
                           originalReview: originalText,
                           translatedReview: translatedText,
                           datePosted: DateTime.now(),
-                          backgroundImageUrl: localImagePath ?? dish.imageUrl,
+                          backgroundImageUrl: reviewImageUrl,
                         );
                         await reviewDocRef.set(newReview.toMap());
 
@@ -266,7 +275,7 @@ void showAddReviewBottomSheet(
                           mealType: selectedMealType,
                           rating: localRating,
                           personalNote: originalText,
-                          photoUrl: dish.imageUrl,
+                          photoUrl: reviewImageUrl,
                         );
                         await logDocRef.set(newLog.toMap());
 
