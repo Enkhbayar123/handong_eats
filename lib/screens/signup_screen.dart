@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import 'main_navigation.dart';
 
@@ -30,26 +32,208 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _studentIdController = TextEditingController();
   bool _obscurePassword = true;
 
+  String? _selectedLocalPath;
+
   // Step 2 Selection
   String _selectedCountry = 'South Korea';
   String _selectedSpiceTolerance = 'Medium';
   String _selectedLanguage = 'English';
 
   final List<Map<String, String>> _countries = [
-    {'name': 'South Korea', 'flag': '🇰🇷'},
-    {'name': 'Mongolia', 'flag': '🇲🇳'},
-    {'name': 'United States', 'flag': '🇺🇸'},
-    {'name': 'Vietnam', 'flag': '🇻🇳'},
-    {'name': 'China', 'flag': '🇨🇳'},
-    {'name': 'Uzbekistan', 'flag': '🇺🇿'},
-    {'name': 'Philippines', 'flag': '🇵🇭'},
-    {'name': 'Indonesia', 'flag': '🇮🇩'},
+    {'name': 'Afghanistan', 'flag': '🇦🇫'},
+    {'name': 'Albania', 'flag': '🇦🇱'},
+    {'name': 'Algeria', 'flag': '🇩🇿'},
+    {'name': 'Andorra', 'flag': '🇦🇩'},
+    {'name': 'Angola', 'flag': '🇦🇴'},
+    {'name': 'Argentina', 'flag': '🇦🇷'},
+    {'name': 'Armenia', 'flag': '🇦🇲'},
+    {'name': 'Australia', 'flag': '🇦🇺'},
+    {'name': 'Austria', 'flag': '🇦🇹'},
+    {'name': 'Azerbaijan', 'flag': '🇦🇿'},
+    {'name': 'Bahamas', 'flag': '🇧🇸'},
+    {'name': 'Bahrain', 'flag': '🇧🇭'},
+    {'name': 'Bangladesh', 'flag': '🇧🇩'},
+    {'name': 'Barbados', 'flag': '🇧🇧'},
+    {'name': 'Belarus', 'flag': '🇧🇾'},
+    {'name': 'Belgium', 'flag': '🇧🇪'},
+    {'name': 'Belize', 'flag': '🇧🇿'},
+    {'name': 'Benin', 'flag': '🇧🇯'},
+    {'name': 'Bhutan', 'flag': '🇧🇹'},
+    {'name': 'Bolivia', 'flag': '🇧🇴'},
+    {'name': 'Bosnia and Herzegovina', 'flag': '🇧🇦'},
+    {'name': 'Botswana', 'flag': '🇧🇼'},
+    {'name': 'Brazil', 'flag': '🇧🇷'},
+    {'name': 'Brunei', 'flag': '🇧🇳'},
+    {'name': 'Bulgaria', 'flag': '🇧🇬'},
+    {'name': 'Burkina Faso', 'flag': '🇧🇫'},
+    {'name': 'Burundi', 'flag': '🇧🇮'},
     {'name': 'Cambodia', 'flag': '🇰🇭'},
-    {'name': 'Thailand', 'flag': '🇹🇭'},
-    {'name': 'Russia', 'flag': '🇷🇺'},
-    {'name': 'Kazakhstan', 'flag': '🇰🇿'},
-    {'name': 'Japan', 'flag': '🇯🇵'},
+    {'name': 'Cameroon', 'flag': '🇨🇲'},
+    {'name': 'Canada', 'flag': '🇨🇦'},
+    {'name': 'Cape Verde', 'flag': '🇨🇻'},
+    {'name': 'Central African Republic', 'flag': '🇨🇫'},
+    {'name': 'Chad', 'flag': '🇹🇩'},
+    {'name': 'Chile', 'flag': '🇨🇱'},
+    {'name': 'China', 'flag': '🇨🇳'},
+    {'name': 'Colombia', 'flag': '🇨🇴'},
+    {'name': 'Comoros', 'flag': '🇰🇲'},
+    {'name': 'Congo', 'flag': '🇨🇬'},
+    {'name': 'Costa Rica', 'flag': '🇨🇷'},
+    {'name': 'Croatia', 'flag': '🇭🇷'},
+    {'name': 'Cuba', 'flag': '🇨🇺'},
+    {'name': 'Cyprus', 'flag': '🇨🇾'},
+    {'name': 'Czech Republic', 'flag': '🇨🇿'},
+    {'name': 'Denmark', 'flag': '🇩🇰'},
+    {'name': 'Djibouti', 'flag': '🇩🇯'},
+    {'name': 'Dominica', 'flag': '🇩🇲'},
+    {'name': 'Dominican Republic', 'flag': '🇩🇴'},
+    {'name': 'East Timor', 'flag': '🇹🇱'},
+    {'name': 'Ecuador', 'flag': '🇪🇨'},
+    {'name': 'Egypt', 'flag': '🇪🇬'},
+    {'name': 'El Salvador', 'flag': '🇸🇻'},
+    {'name': 'Equatorial Guinea', 'flag': '🇬🇶'},
+    {'name': 'Eritrea', 'flag': '🇪🇷'},
+    {'name': 'Estonia', 'flag': '🇪🇪'},
+    {'name': 'Eswatini', 'flag': '🇸🇿'},
+    {'name': 'Ethiopia', 'flag': '🇪🇹'},
+    {'name': 'Fiji', 'flag': '🇫🇯'},
+    {'name': 'Finland', 'flag': '🇫🇮'},
+    {'name': 'France', 'flag': '🇫🇷'},
+    {'name': 'Gabon', 'flag': '🇬🇦'},
+    {'name': 'Gambia', 'flag': '🇬🇲'},
+    {'name': 'Georgia', 'flag': '🇬🇪'},
+    {'name': 'Germany', 'flag': '🇩🇪'},
+    {'name': 'Ghana', 'flag': '🇬🇭'},
+    {'name': 'Greece', 'flag': '🇬🇷'},
+    {'name': 'Grenada', 'flag': '🇬🇩'},
+    {'name': 'Guatemala', 'flag': '🇬🇹'},
+    {'name': 'Guinea', 'flag': '🇬🇳'},
+    {'name': 'Guinea-Bissau', 'flag': '🇬🇼'},
+    {'name': 'Guyana', 'flag': '🇬🇾'},
+    {'name': 'Haiti', 'flag': '🇭🇹'},
+    {'name': 'Honduras', 'flag': '🇭🇳'},
+    {'name': 'Hungary', 'flag': '🇭🇺'},
+    {'name': 'Iceland', 'flag': '🇮🇸'},
     {'name': 'India', 'flag': '🇮🇳'},
+    {'name': 'Indonesia', 'flag': '🇮🇩'},
+    {'name': 'Iran', 'flag': '🇮🇷'},
+    {'name': 'Iraq', 'flag': '🇮🇶'},
+    {'name': 'Ireland', 'flag': '🇮🇪'},
+    {'name': 'Israel', 'flag': '🇮🇱'},
+    {'name': 'Italy', 'flag': '🇮🇹'},
+    {'name': 'Ivory Coast', 'flag': '🇨🇮'},
+    {'name': 'Jamaica', 'flag': '🇯🇲'},
+    {'name': 'Japan', 'flag': '🇯🇵'},
+    {'name': 'Jordan', 'flag': '🇯🇴'},
+    {'name': 'Kazakhstan', 'flag': '🇰🇿'},
+    {'name': 'Kenya', 'flag': '🇰🇪'},
+    {'name': 'Kiribati', 'flag': '🇰🇮'},
+    {'name': 'Kuwait', 'flag': '🇰🇼'},
+    {'name': 'Kyrgyzstan', 'flag': '🇰🇬'},
+    {'name': 'Laos', 'flag': '🇱🇦'},
+    {'name': 'Latvia', 'flag': '🇱🇻'},
+    {'name': 'Lebanon', 'flag': '🇱🇧'},
+    {'name': 'Lesotho', 'flag': '🇱🇸'},
+    {'name': 'Liberia', 'flag': '🇱🇷'},
+    {'name': 'Libya', 'flag': '🇱🇾'},
+    {'name': 'Liechtenstein', 'flag': '🇱🇮'},
+    {'name': 'Lithuania', 'flag': '🇱🇹'},
+    {'name': 'Luxembourg', 'flag': '🇱🇺'},
+    {'name': 'Madagascar', 'flag': '🇲🇬'},
+    {'name': 'Malawi', 'flag': '🇲🇼'},
+    {'name': 'Malaysia', 'flag': '🇲🇾'},
+    {'name': 'Maldives', 'flag': '🇲🇻'},
+    {'name': 'Mali', 'flag': '🇲🇱'},
+    {'name': 'Malta', 'flag': '🇲🇹'},
+    {'name': 'Marshall Islands', 'flag': '🇲🇭'},
+    {'name': 'Mauritania', 'flag': '🇲🇷'},
+    {'name': 'Mauritius', 'flag': '🇲🇺'},
+    {'name': 'Mexico', 'flag': '🇲🇽'},
+    {'name': 'Micronesia', 'flag': '🇫🇲'},
+    {'name': 'Moldova', 'flag': '🇲🇩'},
+    {'name': 'Monaco', 'flag': '🇲🇨'},
+    {'name': 'Mongolia', 'flag': '🇲🇳'},
+    {'name': 'Montenegro', 'flag': '🇲🇪'},
+    {'name': 'Morocco', 'flag': '🇲🇦'},
+    {'name': 'Mozambique', 'flag': '🇲🇿'},
+    {'name': 'Myanmar', 'flag': '🇲🇲'},
+    {'name': 'Namibia', 'flag': '🇳🇦'},
+    {'name': 'Nauru', 'flag': '🇳🇷'},
+    {'name': 'Nepal', 'flag': '🇳🇵'},
+    {'name': 'Netherlands', 'flag': '🇳🇱'},
+    {'name': 'New Zealand', 'flag': '🇳🇿'},
+    {'name': 'Nicaragua', 'flag': '🇳🇮'},
+    {'name': 'Niger', 'flag': '🇳🇪'},
+    {'name': 'Nigeria', 'flag': '🇳🇬'},
+    {'name': 'North Korea', 'flag': '🇰🇵'},
+    {'name': 'North Macedonia', 'flag': '🇲🇰'},
+    {'name': 'Norway', 'flag': '🇳🇴'},
+    {'name': 'Oman', 'flag': '🇴🇲'},
+    {'name': 'Pakistan', 'flag': '🇵🇰'},
+    {'name': 'Palau', 'flag': '🇵🇼'},
+    {'name': 'Palestine', 'flag': '🇵🇸'},
+    {'name': 'Panama', 'flag': '🇵🇦'},
+    {'name': 'Papua New Guinea', 'flag': '🇵🇬'},
+    {'name': 'Paraguay', 'flag': '🇵🇾'},
+    {'name': 'Peru', 'flag': '🇵🇪'},
+    {'name': 'Philippines', 'flag': '🇵🇭'},
+    {'name': 'Poland', 'flag': '🇵🇱'},
+    {'name': 'Portugal', 'flag': '🇵🇹'},
+    {'name': 'Qatar', 'flag': '🇶🇦'},
+    {'name': 'Romania', 'flag': '🇷🇴'},
+    {'name': 'Russia', 'flag': '🇷🇺'},
+    {'name': 'Rwanda', 'flag': '🇷🇼'},
+    {'name': 'Saint Kitts and Nevis', 'flag': '🇰🇳'},
+    {'name': 'Saint Lucia', 'flag': '🇱🇨'},
+    {'name': 'Saint Vincent', 'flag': '🇻🇨'},
+    {'name': 'Samoa', 'flag': '🇼🇸'},
+    {'name': 'San Marino', 'flag': '🇸🇲'},
+    {'name': 'Sao Tome and Principe', 'flag': '🇸🇹'},
+    {'name': 'Saudi Arabia', 'flag': '🇸🇦'},
+    {'name': 'Senegal', 'flag': '🇸🇳'},
+    {'name': 'Serbia', 'flag': '🇷🇸'},
+    {'name': 'Seychelles', 'flag': '🇸🇨'},
+    {'name': 'Sierra Leone', 'flag': '🇸🇱'},
+    {'name': 'Singapore', 'flag': '🇸🇬'},
+    {'name': 'Slovakia', 'flag': '🇸🇰'},
+    {'name': 'Slovenia', 'flag': '🇸🇮'},
+    {'name': 'Solomon Islands', 'flag': '🇸🇧'},
+    {'name': 'Somalia', 'flag': '🇸🇴'},
+    {'name': 'South Africa', 'flag': '🇿🇦'},
+    {'name': 'South Korea', 'flag': '🇰🇷'},
+    {'name': 'South Sudan', 'flag': '🇸🇸'},
+    {'name': 'Spain', 'flag': '🇪🇸'},
+    {'name': 'Sri Lanka', 'flag': '🇱🇰'},
+    {'name': 'Sudan', 'flag': '🇸🇩'},
+    {'name': 'Suriname', 'flag': '🇸🇷'},
+    {'name': 'Sweden', 'flag': '🇸🇪'},
+    {'name': 'Switzerland', 'flag': '🇨🇭'},
+    {'name': 'Syria', 'flag': '🇸🇾'},
+    {'name': 'Taiwan', 'flag': '🇹🇼'},
+    {'name': 'Tajikistan', 'flag': '🇹🇯'},
+    {'name': 'Tanzania', 'flag': '🇹🇿'},
+    {'name': 'Thailand', 'flag': '🇹🇭'},
+    {'name': 'Togo', 'flag': '🇹🇬'},
+    {'name': 'Tonga', 'flag': '🇹🇴'},
+    {'name': 'Trinidad and Tobago', 'flag': '🇹🇹'},
+    {'name': 'Tunisia', 'flag': '🇹🇳'},
+    {'name': 'Turkey', 'flag': '🇹🇷'},
+    {'name': 'Turkmenistan', 'flag': '🇹🇲'},
+    {'name': 'Tuvalu', 'flag': '🇹🇻'},
+    {'name': 'Uganda', 'flag': '🇺🇬'},
+    {'name': 'Ukraine', 'flag': '🇺🇦'},
+    {'name': 'United Arab Emirates', 'flag': '🇦🇪'},
+    {'name': 'United Kingdom', 'flag': '🇬🇧'},
+    {'name': 'United States', 'flag': '🇺🇸'},
+    {'name': 'Uruguay', 'flag': '🇺🇾'},
+    {'name': 'Uzbekistan', 'flag': '🇺🇿'},
+    {'name': 'Vanuatu', 'flag': '🇻🇺'},
+    {'name': 'Vatican City', 'flag': '🇻🇦'},
+    {'name': 'Venezuela', 'flag': '🇻🇪'},
+    {'name': 'Vietnam', 'flag': '🇻🇳'},
+    {'name': 'Yemen', 'flag': '🇾🇪'},
+    {'name': 'Zambia', 'flag': '🇿🇲'},
+    {'name': 'Zimbabwe', 'flag': '🇿🇼'},
   ];
 
   final List<Map<String, dynamic>> _spiceLevels = [
@@ -130,6 +314,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final success = await AuthService.signUp(
       email: _emailController.text,
+      password: _passwordController.text,
       name: _nameController.text,
       studentId: _studentIdController.text,
       country: _selectedCountry,
@@ -138,6 +323,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       allergies: _selectedAllergies,
       preferredTastes: _selectedFlavors,
       preferredLanguage: _selectedLanguage,
+      profileImageUrl: _selectedLocalPath,
     );
 
     setState(() {
@@ -314,7 +500,109 @@ class _SignUpScreenState extends State<SignUpScreen> {
               "Let's get started with your basic information",
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
+            // --- PROFILE PICTURE SELECTOR ---
+            Center(
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 46,
+                        backgroundColor: Colors.grey[200],
+                        backgroundImage: _selectedLocalPath != null
+                            ? FileImage(File(_selectedLocalPath!))
+                            : null,
+                        child: _selectedLocalPath == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Colors.grey,
+                              )
+                            : null,
+                      ),
+                      if (_selectedLocalPath == null)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[600],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              "DEFAULT",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final picker = ImagePicker();
+                          final photo = await picker.pickImage(
+                            source: ImageSource.gallery,
+                          );
+                          if (photo != null) {
+                            setState(() {
+                              _selectedLocalPath = photo.path;
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        icon: const Icon(Icons.photo_library_outlined, size: 18),
+                        label: const Text(
+                          "Choose from Gallery",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                      if (_selectedLocalPath != null) ...[
+                        const SizedBox(width: 12),
+                        OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedLocalPath = null;
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey[700],
+                            side: BorderSide(color: Colors.grey[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          child: const Text(
+                            "Remove",
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
 
             // Full Name Input
             Text("FULL NAME", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 0.5)),

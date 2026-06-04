@@ -53,8 +53,18 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   String _formatDate(DateTime date) {
     const List<String> months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return "${months[date.month - 1]} ${date.day}, ${date.year}";
   }
@@ -68,27 +78,42 @@ class _EditLogScreenState extends State<EditLogScreen> {
         foregroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
-        title: const Text("Edit Log", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Edit Log",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel", style: TextStyle(color: Colors.black54, fontSize: 16)),
+          child: const Text(
+            "Cancel",
+            style: TextStyle(color: Colors.black54, fontSize: 16),
+          ),
         ),
         leadingWidth: 80,
         actions: [
           TextButton(
             onPressed: () async {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Updating log...')));
-              await FirebaseFirestore.instance.collection('meal_logs').doc(widget.logId).update({
-                'rating': _currentRating,
-                'personalNote': _noteController.text,
-              });
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Updating log...')));
+              await FirebaseFirestore.instance
+                  .collection('meal_logs')
+                  .doc(widget.logId)
+                  .update({
+                    'rating': _currentRating,
+                    'personalNote': _noteController.text,
+                  });
               if (mounted) {
                 Navigator.pop(context);
               }
             },
             child: const Text(
               "Post",
-              style: TextStyle(color: Color(0xFFE94E5D), fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Color(0xFFE94E5D),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -126,21 +151,33 @@ class _EditLogScreenState extends State<EditLogScreen> {
                       children: [
                         Text(
                           widget.foodName,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           widget.restaurant,
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _formatDate(widget.date),
-                          style: const TextStyle(fontSize: 12, color: Color(0xFFE94E5D), fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFE94E5D),
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -148,7 +185,10 @@ class _EditLogScreenState extends State<EditLogScreen> {
               const SizedBox(height: 24),
 
               // --- 2. Interactive Star Rating ---
-              const Text("Rate this meal", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                "Rate this meal",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -165,8 +205,12 @@ class _EditLogScreenState extends State<EditLogScreen> {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 6.0),
                           child: Icon(
-                            starValue <= _currentRating ? Icons.star_rounded : Icons.star_border_rounded,
-                            color: starValue <= _currentRating ? Colors.amber : Colors.grey[300],
+                            starValue <= _currentRating
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            color: starValue <= _currentRating
+                                ? Colors.amber
+                                : Colors.grey[300],
                             size: 40,
                           ),
                         ),
@@ -174,22 +218,32 @@ class _EditLogScreenState extends State<EditLogScreen> {
                     }),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       _ratingLabels[_currentRating] ?? "Okay",
-                      style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
 
               // --- 3. Personal Note Text Area ---
-              const Text("Personal Note", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                "Personal Note",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _noteController,
@@ -218,17 +272,33 @@ class _EditLogScreenState extends State<EditLogScreen> {
                     bool? confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text("Delete Log Entry", style: TextStyle(fontWeight: FontWeight.bold)),
-                        content: const Text("Are you sure you want to remove this log from your plate? This cannot be undone."),
+                        title: const Text(
+                          "Delete Log Entry",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        content: const Text(
+                          "Are you sure you want to remove this log from your plate? This cannot be undone.",
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text("Cancel", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-                            child: const Text("Delete", style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.redAccent,
+                            ),
+                            child: const Text(
+                              "Delete",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ],
                       ),
@@ -236,9 +306,14 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
                     if (confirm == true) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleting log...')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Deleting log...')),
+                        );
                       }
-                      await FirebaseFirestore.instance.collection('meal_logs').doc(widget.logId).delete();
+                      await FirebaseFirestore.instance
+                          .collection('meal_logs')
+                          .doc(widget.logId)
+                          .delete();
                       if (mounted) {
                         Navigator.pop(context);
                       }
@@ -247,10 +322,15 @@ class _EditLogScreenState extends State<EditLogScreen> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFE94E5D),
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   icon: const Icon(Icons.delete_outline, size: 20),
-                  label: const Text("Delete Log Entry", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    "Delete Log Entry",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'nutrition_dashboard_screen.dart';
 import 'login_screen.dart';
@@ -23,6 +25,86 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  void _showAvatarPicker(String activeUserId, String currentAvatarUrl) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Edit Profile Picture",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined, color: Colors.black87),
+                  title: const Text("Choose from Gallery", style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final picker = ImagePicker();
+                    final photo = await picker.pickImage(source: ImageSource.gallery);
+                    if (photo != null) {
+                      await _updateProfileImage(activeUserId, photo.path);
+                    }
+                  },
+                ),
+                if (currentAvatarUrl.isNotEmpty) ...[
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    title: const Text("Remove Photo", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await _updateProfileImage(activeUserId, "");
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _updateProfileImage(String activeUserId, String path) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(activeUserId)
+          .update({'profileImageUrl': path});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Profile picture updated successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error updating profile image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to update profile picture: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -126,13 +208,43 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: Colors.grey[200],
-            backgroundImage: NetworkImage(
-              user.profileImageUrl.isNotEmpty
-                  ? user.profileImageUrl
-                  : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80",
+          GestureDetector(
+            onTap: () => _showAvatarPicker(user.uid, user.profileImageUrl),
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 48,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: user.profileImageUrl.isNotEmpty
+                      ? (user.profileImageUrl.startsWith('http')
+                          ? NetworkImage(user.profileImageUrl)
+                          : FileImage(File(user.profileImageUrl)) as ImageProvider)
+                      : null,
+                  child: user.profileImageUrl.isEmpty
+                      ? const Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.grey,
+                        )
+                      : null,
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -517,7 +629,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             onChanged: (bool value) async {
               await FirebaseFirestore.instance
                   .collection('users')
-                  .doc('user_1')
+                  .doc(user.uid)
                   .set({'pushNotificationsEnabled': value}, SetOptions(merge: true));
             },
           ),

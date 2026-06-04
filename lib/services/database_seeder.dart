@@ -107,7 +107,9 @@ class DatabaseSeeder {
       ),
     ];
     for (var user in users) {
-      await collection.doc(user.uid).set(user.toMap());
+      final userData = user.toMap();
+      userData['password'] = '123456'; // Default password for seeded users
+      await collection.doc(user.uid).set(userData);
     }
   }
 

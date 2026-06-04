@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_generative_ai/google_generative_ai.dart'; // Import for Gemini API
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -117,11 +118,42 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
     String? cleanText;
     try {
-      for (final modelName in modelNames) {
-        cleanText = await tryQueryDescription(modelName);
-        if (cleanText != null) {
-          break;
-        }
+      // Secure API Key loaded dynamically from .env to prevent leakage on GitHub
+      final apiKey =
+          (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ??
+          const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+      // Using gemini-flash-latest for rapid text generations
+      final model = GenerativeModel(
+        model: 'gemini-flash-latest',
+        apiKey: apiKey,
+      );
+
+      final user = AuthService.currentUser;
+      final userCountry = user?.country ?? 'South Korea';
+      final spiceTolerance = user?.spiceTolerance ?? 'Medium';
+      final dietaryLabels = user?.dietaryLabels ?? [];
+      final allergies = user?.allergies ?? [];
+      final preferredTastes = user?.preferredTastes ?? [];
+      final preferredLanguage = user?.preferredLanguage ?? 'English';
+
+      final dishName = widget.dish.name;
+
+      // Prompt: dry, factual, no fluff, with nationality-based comparison
+      var prompt =
+          '"$dishName" 음식에 대해 2~3문장으로 설명해줘. '
+          '백과사전이나 검색 결과처럼 건조하고 사실적으로만 써. '
+          '절대 맛있다, 풍미가 일품이다, 입안에서 녹는다 같은 오글거리는 표현 쓰지 마. '
+          '그냥 어떤 재료로 만들고 어떤 종류의 음식인지 설명해줘. 한국어로 써. '
+          '또한, 사용자의 출신 국가는 "$userCountry"입니다. '
+          '만약 "$userCountry"에 이 음식("$dishName")과 조리법, 재료, 컨셉 등이 유사한 대표적인 현지 음식이 있다면, '
+          '"이 음식은 $userCountry의 [유사 음식 이름]과 유사합니다." 형태로 비슷한 점을 비교하여 쉽게 이해할 수 있게 설명하는 한 문장을 꼭 덧붙여줘. '
+          '(만약 사용자의 국가가 South Korea인 경우에는 한국의 다른 대중적인 음식과 비교해줘.)';
+
+      // Allergy warning only
+      if (allergies.isNotEmpty) {
+        prompt +=
+            ' 알레르기 주의: 사용자가 ${allergies.join(", ")}에 알레르기가 있음. 해당 성분이 포함될 수 있으면 맨 앞에 경고해줘.';
       }
     } catch (e) {
       if (e.toString().contains('QUOTA_EXCEEDED')) {
@@ -591,7 +623,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                             size: 18,
                                           ),
                                           label: Text(
-                                            LocalizationService.tr('generate_ai'),
+                                            LocalizationService.tr(
+                                              'generate_ai',
+                                            ),
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
@@ -1073,20 +1107,29 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 18,
-                                      backgroundColor: Colors.grey[200],
-                                      backgroundImage: userImage.isNotEmpty ? NetworkImage(userImage) : null,
-                                      child: userImage.isEmpty ? const Icon(Icons.person, color: Colors.grey) : null,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: Colors.grey[200],
+                                    backgroundImage: userImage.isNotEmpty
+                                        ? (userImage.startsWith('http')
+                                            ? NetworkImage(userImage)
+                                            : FileImage(File(userImage)) as ImageProvider)
+                                        : null,
+                                    child: userImage.isEmpty
+                                        ? const Icon(
+                                            Icons.person,
+                                            color: Colors.grey,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
                                           Row(
                                             children: [

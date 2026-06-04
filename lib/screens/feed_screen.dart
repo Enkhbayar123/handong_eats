@@ -275,9 +275,11 @@ class _FeedCardState extends State<_FeedCard> {
               radius: 18,
               backgroundColor: Colors.grey[800],
               backgroundImage: _user != null && _user!.profileImageUrl.isNotEmpty
-                  ? NetworkImage(_user!.profileImageUrl)
+                  ? (_user!.profileImageUrl.startsWith('http')
+                      ? NetworkImage(_user!.profileImageUrl)
+                      : FileImage(File(_user!.profileImageUrl)) as ImageProvider)
                   : null,
-              child: _user == null
+              child: (_user == null || _user!.profileImageUrl.isEmpty)
                   ? const Icon(Icons.person, color: Colors.white54, size: 18)
                   : null,
             ),

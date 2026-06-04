@@ -74,8 +74,8 @@ class AuthService {
     }
   }
 
-  /// Logs in the user by matching their email in the Firestore 'users' collection
-  static Future<bool> login(String email) async {
+  /// Logs in the user by matching their email and password in the Firestore 'users' collection
+  static Future<bool> login(String email, String password) async {
     try {
       final querySnapshot = await _firestore
           .collection('users')
@@ -84,13 +84,30 @@ class AuthService {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        currentUser = UserModel.fromFirestore(querySnapshot.docs.first);
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final storedPassword = data['password'] as String?;
+
+        if (storedPassword != null) {
+          if (storedPassword != password) {
+            debugPrint('Password mismatch for user: $email');
+            return false;
+          }
+        } else {
+          // Fallback: If no password is saved in DB (e.g. from older seeds), default to '123456'
+          if (password != '123456') {
+            debugPrint('Default password check failed for user: $email');
+            return false;
+          }
+        }
+
+        currentUser = UserModel.fromFirestore(doc);
         debugPrint('Logged in user: ${currentUser?.name}');
         return true;
       }
       
       // Fallback: Check if they are trying to log in with a seed email but Firestore hasn't been seeded yet
-      if (email.trim() == 'student1@handong.ac.kr') {
+      if (email.trim() == 'student1@handong.ac.kr' && password == '123456') {
         currentUser = UserModel(
           uid: 'user_1',
           email: 'student1@handong.ac.kr',
@@ -118,6 +135,7 @@ class AuthService {
   /// Signs up a new user, saves their profile to Firestore, and logs them in
   static Future<bool> signUp({
     required String email,
+    required String password,
     required String name,
     required String studentId,
     required String country,
@@ -126,6 +144,7 @@ class AuthService {
     required List<String> allergies,
     required List<String> preferredTastes,
     required String preferredLanguage,
+    String? profileImageUrl,
   }) async {
     try {
       final uid = 'user_${DateTime.now().millisecondsSinceEpoch}';
@@ -134,7 +153,7 @@ class AuthService {
         email: email.trim(),
         studentId: studentId.trim(),
         name: name.trim(),
-        profileImageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80', // Default gorgeous avatar
+        profileImageUrl: profileImageUrl ?? '',
         dietaryLabels: dietaryLabels,
         allergies: allergies,
         pushNotificationsEnabled: true,
@@ -145,8 +164,10 @@ class AuthService {
         preferredLanguage: preferredLanguage,
       );
 
-      // Save to Firestore users collection
-      await _firestore.collection('users').doc(uid).set(newUser.toMap());
+      // Save to Firestore users collection along with password
+      final userData = newUser.toMap();
+      userData['password'] = password;
+      await _firestore.collection('users').doc(uid).set(userData);
       
       // Update session
       currentUser = newUser;
