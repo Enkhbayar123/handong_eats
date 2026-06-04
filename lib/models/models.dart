@@ -80,6 +80,7 @@ class RestaurantModel {
   final String openTime;
   final String closeTime;
   final CrowdedStatus currentStatus;
+  final String imageUrl;
 
   RestaurantModel({
     required this.id,
@@ -87,6 +88,7 @@ class RestaurantModel {
     required this.openTime,
     required this.closeTime,
     required this.currentStatus,
+    required this.imageUrl,
   });
 
   factory RestaurantModel.fromFirestore(DocumentSnapshot doc) {
@@ -104,6 +106,7 @@ class RestaurantModel {
       openTime: data['openTime'] ?? '',
       closeTime: data['closeTime'] ?? '',
       currentStatus: status,
+      imageUrl: data['imageUrl'] ?? '',
     );
   }
 
@@ -113,6 +116,7 @@ class RestaurantModel {
       'openTime': openTime,
       'closeTime': closeTime,
       'currentStatus': currentStatus.name,
+      'imageUrl': imageUrl,
     };
   }
 }
@@ -240,6 +244,8 @@ class ReviewModel {
   final String translatedReview;
   final DateTime datePosted;
   final String backgroundImageUrl;
+  final int likesCount;
+  final List<String> likedBy;
 
   ReviewModel({
     required this.id,
@@ -250,6 +256,8 @@ class ReviewModel {
     required this.translatedReview,
     required this.datePosted,
     required this.backgroundImageUrl,
+    this.likesCount = 0,
+    this.likedBy = const [],
   });
 
   factory ReviewModel.fromFirestore(DocumentSnapshot doc) {
@@ -263,6 +271,8 @@ class ReviewModel {
       translatedReview: data['translatedReview'] ?? '',
       datePosted: (data['datePosted'] as Timestamp?)?.toDate() ?? DateTime.now(),
       backgroundImageUrl: data['backgroundImageUrl'] ?? '',
+      likesCount: data['likesCount'] ?? 0,
+      likedBy: List<String>.from(data['likedBy'] ?? []),
     );
   }
 
@@ -275,6 +285,8 @@ class ReviewModel {
       'translatedReview': translatedReview,
       'datePosted': Timestamp.fromDate(datePosted),
       'backgroundImageUrl': backgroundImageUrl,
+      'likesCount': likesCount,
+      'likedBy': likedBy,
     };
   }
 }

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dish_detail_screen.dart';
 import '../models/models.dart';
 import '../services/localization.dart';
+import '../widgets/app_image.dart';
 
 class TodayMenuScreen extends StatefulWidget {
   const TodayMenuScreen({super.key});
@@ -222,14 +223,13 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                               border: Border.all(color: ringColor, width: 3),
                             ),
                             child: ClipOval(
-                              child: Image.network(
-                                meal.imageUrl,
+                              child: AppImage(
+                                imageUrl: meal.imageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                      color: Colors.grey[300],
-                                      child: const Icon(Icons.restaurant),
-                                    ),
+                                errorWidget: Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.restaurant),
+                                ),
                               ),
                             ),
                           ),
@@ -460,21 +460,11 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(18),
-                          child: Image.network(
-                            item.imageUrl,
+                          child: AppImage(
+                            imageUrl: item.imageUrl,
                             width: 90,
                             height: 90,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  width: 90,
-                                  height: 90,
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.fastfood,
-                                    color: Colors.grey,
-                                  ),
-                                ),
                           ),
                         ),
                         const SizedBox(width: 16),

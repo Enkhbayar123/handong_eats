@@ -16,39 +16,13 @@ void main() async {
   }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // ONE-TIME FIX: Remove fake review counts from database (restored to clean DB)
+  // Force clean database refresh on this launch to remove all old menus
   try {
-    final menuItems = await FirebaseFirestore.instance.collection('menu_items').get();
-    for (var doc in menuItems.docs) {
-      final reviews = await FirebaseFirestore.instance.collection('reviews').where('menuItemId', isEqualTo: doc.id).get();
-      int count = reviews.docs.length;
-      double totalRating = 0.0;
-      for (var r in reviews.docs) {
-        totalRating += (r['rating'] as num).toDouble();
-      }
-      double avgRating = count > 0 ? totalRating / count : 0.0;
-      avgRating = double.parse(avgRating.toStringAsFixed(1));
-      await doc.reference.update({
-        'reviewCount': count,
-        'averageRating': avgRating,
-      });
-    }
-    debugPrint("✅ Reviews database successfully cleaned!");
+    debugPrint("Forcing database seeder refresh to remove old menus...");
+    await DatabaseSeeder.runAllSeeds();
+    debugPrint("Database seeder refresh complete.");
   } catch (e) {
-    debugPrint("Error fixing reviews: $e");
-  }
-
-  // Auto-seed if database is empty to guarantee a working first-launch experience
-  try {
-    final rests = await FirebaseFirestore.instance
-        .collection('restaurants')
-        .limit(1)
-        .get();
-    if (rests.docs.isEmpty) {
-      await DatabaseSeeder.runAllSeeds();
-    }
-  } catch (e) {
-    debugPrint("Auto-seeding check skipped/failed: $e");
+    debugPrint("Database seeding failed: $e");
   }
 
   runApp(const HandongEatsApp());

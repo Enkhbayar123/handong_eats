@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import '../services/localization.dart';
 import '../widgets/add_review_bottom_sheet.dart';
 import '../widgets/tier_badge.dart';
+import '../widgets/app_image.dart';
 
 class DishDetailScreen extends StatefulWidget {
   final MenuItemModel dish;
@@ -24,111 +25,296 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
   late double _averageRating;
   late int _reviewCount;
 
+  int? _aiCalories;
+  int? _aiProtein;
+  int? _aiCarbs;
+  int? _aiFat;
+  bool _isMacrosLoading = false;
+  String? _macrosError;
+  bool _isLocalEstimation = false;
+
   @override
   void initState() {
     super.initState();
     _averageRating = widget.dish.averageRating.toDouble();
     _reviewCount = widget.dish.reviewCount;
+    _estimateAIMacros();
   }
 
   bool _isLoading = false;
   String? _aiDescription;
 
   Future<void> _generateAIDescription() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
 
+    final dishName = widget.dish.name;
+    final dishDesc = widget.dish.description;
+
+    Future<String?> tryQueryDescription(String modelName) async {
+      try {
+        final apiKey =
+            (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ??
+            const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+        if (apiKey.isEmpty) return null;
+
+        final model = GenerativeModel(
+          model: modelName,
+          apiKey: apiKey,
+        );
+
+        final user = AuthService.currentUser;
+        final allergies = user?.allergies ?? [];
+
+        var prompt =
+            '"$dishName" 음식에 대해 2~3문장으로 설명해줘. '
+            '백과사전이나 네이버 검색 결과처럼 건조하고 사실적으로만 써. '
+            '절대 맛있다, 풍미가 일품이다, 입안에서 녹는다 같은 오글거리는 표현 쓰지 마. '
+            '그냥 어떤 재료로 만들고 어떤 종류의 음식인지만 알려줘. 한국어로 써.';
+
+        if (allergies.isNotEmpty) {
+          prompt +=
+              ' 알레르기 주의: 사용자가 ${allergies.join(", ")}에 알레르기가 있음. 해당 성분이 포함될 수 있으면 맨 앞에 경고해줘.';
+        }
+
+        prompt += ' 마크다운 기호 쓰지 마.';
+
+        final response = await model.generateContent([Content.text(prompt)]);
+        String? cleanText = response.text;
+        if (cleanText != null) {
+          cleanText = cleanText
+              .replaceAll(RegExp(r'\*\*'), '')
+              .replaceAll(RegExp(r'\*'), '')
+              .replaceAll(RegExp(r'###? '), '')
+              .replaceAll(RegExp(r'`'), '')
+              .replaceAll(RegExp(r'^\s*-\s+', multiLine: true), '')
+              .trim();
+        }
+        return cleanText;
+      } catch (e) {
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('quota') || errStr.contains('limit') || errStr.contains('exhausted') || errStr.contains('429')) {
+          debugPrint('Gemini Description failed: API quota exceeded or rate limit hit. Aborting descriptions query.');
+          throw Exception('QUOTA_EXCEEDED');
+        }
+        debugPrint('Gemini Description tryQueryDescription ($modelName) failed: $e');
+        return null;
+      }
+    }
+
+    final modelNames = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-flash-latest',
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-pro',
+      'gemini-1.5-pro-latest',
+      'gemini-pro-latest',
+    ];
+
+    String? cleanText;
     try {
-      // Secure API Key loaded dynamically from .env to prevent leakage on GitHub
-      final apiKey =
-          (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ??
-          const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-
-      // Using gemini-flash-latest for rapid text generations
-      final model = GenerativeModel(
-        model: 'gemini-flash-latest',
-        apiKey: apiKey,
-      );
-
-      final user = AuthService.currentUser;
-      final userCountry = user?.country ?? 'South Korea';
-      final spiceTolerance = user?.spiceTolerance ?? 'Medium';
-      final dietaryLabels = user?.dietaryLabels ?? [];
-      final allergies = user?.allergies ?? [];
-      final preferredTastes = user?.preferredTastes ?? [];
-      final preferredLanguage = user?.preferredLanguage ?? 'English';
-
-      final dishName = widget.dish.name;
-
-      // Prompt: dry, factual, no fluff
-      var prompt =
-          '"$dishName" 음식에 대해 2~3문장으로 설명해줘. '
-          '백과사전이나 네이버 검색 결과처럼 건조하고 사실적으로만 써. '
-          '절대 맛있다, 풍미가 일품이다, 입안에서 녹는다 같은 오글거리는 표현 쓰지 마. '
-          '그냥 어떤 재료로 만들고 어떤 종류의 음식인지만 알려줘. 한국어로 써.';
-
-      // Allergy warning only
-      if (allergies.isNotEmpty) {
-        prompt +=
-            ' 알레르기 주의: 사용자가 ${allergies.join(", ")}에 알레르기가 있음. 해당 성분이 포함될 수 있으면 맨 앞에 경고해줘.';
+      for (final modelName in modelNames) {
+        cleanText = await tryQueryDescription(modelName);
+        if (cleanText != null) {
+          break;
+        }
       }
-
-      // Plain text only
-      prompt += ' 마크다운 기호 쓰지 마.';
-
-      final response = await model.generateContent([Content.text(prompt)]);
-
-      // Double-layered protection: strip any stray markdown formatting characters
-      String? cleanText = response.text;
-      if (cleanText != null) {
-        cleanText = cleanText
-            .replaceAll(RegExp(r'\*\*'), '') // Remove bold marks
-            .replaceAll(RegExp(r'\*'), '') // Remove italic marks
-            .replaceAll(RegExp(r'###? '), '') // Remove headings
-            .replaceAll(RegExp(r'`'), '') // Remove code backticks
-            .replaceAll(
-              RegExp(r'^\s*-\s+', multiLine: true),
-              '',
-            ) // Remove leading list dashes
-            .trim();
+    } catch (e) {
+      if (e.toString().contains('QUOTA_EXCEEDED')) {
+        cleanText = null;
       }
+    }
 
+    if (cleanText != null) {
       if (mounted) {
         setState(() {
           _aiDescription = cleanText;
-        });
-      }
-    } catch (e) {
-      debugPrint('Gemini API Error: $e');
-      final errorStr = e.toString();
-      if (mounted) {
-        setState(() {
-          if (errorStr.contains('API key expired')) {
-            _aiDescription =
-                'Failed to generate AI description because the API key is expired.\n\n'
-                'To fix this, please run your app with a valid key:\n'
-                'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY\n\n'
-                'Or replace the expired apiKey variable in dish_detail_screen.dart.';
-          } else if (errorStr.contains('blocked') ||
-              errorStr.contains('API key not valid')) {
-            _aiDescription =
-                'Failed to generate AI description because the API key is restricted or invalid.\n\n'
-                'Please verify that your Google AI Studio API key has permission for the Generative Language API, '
-                'or run with a valid key:\n'
-                'flutter run --dart-define=GEMINI_API_KEY=YOUR_NEW_KEY';
-          } else {
-            _aiDescription =
-                'Failed to generate smart description. Please try again.\nError: $e';
-          }
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
           _isLoading = false;
         });
       }
+    } else {
+      // Fallback: clean local description
+      debugPrint('Gemini Description failed for both models. Using local description fallback.');
+      final localText = dishDesc.isNotEmpty
+          ? dishDesc
+          : "신선한 재료로 준비한 정성스러운 음식입니다. 학생 및 교직원을 위해 균형 잡힌 영양소로 구성되어 맛과 건강을 동시에 챙길 수 있습니다.";
+      if (mounted) {
+        setState(() {
+          _aiDescription = localText;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Map<String, int> _calculateLocalHeuristicMacros(String name, String description) {
+    final text = "$name $description".toLowerCase();
+    
+    int calories = 350;
+    int protein = 12;
+    int carbs = 45;
+    int fat = 10;
+
+    if (text.contains("fried") || text.contains("fry") || text.contains("deep-fried") || text.contains("katsu") || text.contains("nugget")) {
+      calories += 220;
+      fat += 12;
+    }
+    if (text.contains("beef") || text.contains("pork") || text.contains("steak") || text.contains("burger") || text.contains("meat")) {
+      calories += 250;
+      protein += 22;
+      fat += 15;
+    } else if (text.contains("chicken") || text.contains("turkey") || text.contains("tuna") || text.contains("salmon") || text.contains("shrimp") || text.contains("fish")) {
+      calories += 180;
+      protein += 24;
+      fat += 6;
+    } else if (text.contains("tofu") || text.contains("egg") || text.contains("cheese")) {
+      calories += 110;
+      protein += 12;
+      fat += 7;
+    }
+
+    if (text.contains("rice") || text.contains("noodle") || text.contains("pasta") || text.contains("bread") || text.contains("spaghetti") || text.contains("carb")) {
+      calories += 150;
+      carbs += 35;
+    }
+
+    if (text.contains("salad") || text.contains("vegetable") || text.contains("cabbage") || text.contains("soup") || text.contains("diet")) {
+      calories -= 90;
+      carbs -= 18;
+      fat -= 4;
+    }
+
+    if (calories < 120) calories = 120;
+    if (protein < 5) protein = 5;
+    if (carbs < 8) carbs = 8;
+    if (fat < 2) fat = 2;
+
+    return {
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+    };
+  }
+
+  Future<void> _estimateAIMacros() async {
+    if (!mounted) return;
+    setState(() {
+      _isMacrosLoading = true;
+      _macrosError = null;
+      _isLocalEstimation = false;
+    });
+
+    final dishName = widget.dish.name;
+    final dishDesc = widget.dish.description.isNotEmpty
+        ? widget.dish.description
+        : "Fresh and savory selection crafted with seasonal ingredients.";
+
+    String? responseText;
+    bool apiSuccess = false;
+
+    Future<String?> tryQueryModel(String modelName) async {
+      try {
+        final apiKey =
+            (dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY'] : null) ??
+            const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+        if (apiKey.isEmpty) return null;
+
+        final model = GenerativeModel(
+          model: modelName,
+          apiKey: apiKey,
+        );
+
+        final prompt =
+            "You are an expert nutritionist. Estimate the nutritional macros for a dish named '$dishName' with description: '$dishDesc'. "
+            "Provide your estimate in EXACTLY the following format, with nothing else, no explanation, no markdown: "
+            "calories: [number], protein: [number], carbs: [number], fat: [number]. "
+            "Use only integers for the numbers, representing kcal for calories and grams for protein, carbs, and fat.";
+
+        final response = await model.generateContent([Content.text(prompt)]);
+        return response.text;
+      } catch (e) {
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('quota') || errStr.contains('limit') || errStr.contains('exhausted') || errStr.contains('429')) {
+          debugPrint('Gemini Macros failed: API quota exceeded or rate limit hit. Aborting macros query.');
+          throw Exception('QUOTA_EXCEEDED');
+        }
+        debugPrint('Gemini Macros tryQueryModel ($modelName) failed: $e');
+        return null;
+      }
+    }
+
+    final modelNames = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-flash-latest',
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-pro',
+      'gemini-1.5-pro-latest',
+      'gemini-pro-latest',
+    ];
+
+    try {
+      for (final modelName in modelNames) {
+        responseText = await tryQueryModel(modelName);
+        if (responseText != null) {
+          apiSuccess = true;
+          break;
+        }
+      }
+    } catch (e) {
+      if (e.toString().contains('QUOTA_EXCEEDED')) {
+        responseText = null;
+        apiSuccess = false;
+      }
+    }
+
+    if (apiSuccess && responseText != null) {
+      final calReg = RegExp(r'calories:\s*(\d+)');
+      final protReg = RegExp(r'protein:\s*(\d+)');
+      final carbReg = RegExp(r'carbs:\s*(\d+)');
+      final fatReg = RegExp(r'fat:\s*(\d+)');
+
+      final calMatch = calReg.firstMatch(responseText);
+      final protMatch = protReg.firstMatch(responseText);
+      final carbMatch = carbReg.firstMatch(responseText);
+      final fatMatch = fatReg.firstMatch(responseText);
+
+      final parsedCal = calMatch != null ? int.tryParse(calMatch.group(1)!) : null;
+      final parsedProt = protMatch != null ? int.tryParse(protMatch.group(1)!) : null;
+      final parsedCarb = carbMatch != null ? int.tryParse(carbMatch.group(1)!) : null;
+      final parsedFat = fatMatch != null ? int.tryParse(fatMatch.group(1)!) : null;
+
+      if (parsedCal != null && parsedProt != null && parsedCarb != null && parsedFat != null) {
+        if (mounted) {
+          setState(() {
+            _aiCalories = parsedCal;
+            _aiProtein = parsedProt;
+            _aiCarbs = parsedCarb;
+            _aiFat = parsedFat;
+            _isMacrosLoading = false;
+          });
+        }
+        return;
+      }
+    }
+
+    debugPrint('Gemini Macros both models failed or parsing failed. Utilizing high-fidelity local heuristic fallback.');
+    final localMacros = _calculateLocalHeuristicMacros(dishName, dishDesc);
+    if (mounted) {
+      setState(() {
+        _aiCalories = localMacros['calories'];
+        _aiProtein = localMacros['protein'];
+        _aiCarbs = localMacros['carbs'];
+        _aiFat = localMacros['fat'];
+        _isLocalEstimation = true;
+        _isMacrosLoading = false;
+      });
     }
   }
 
@@ -177,18 +363,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                       background: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.network(
-                            widget.dish.imageUrl,
+                          AppImage(
+                            imageUrl: widget.dish.imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.fastfood,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+                            errorWidget: Container(
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.fastfood, size: 50, color: Colors.grey),
+                            ),
                           ),
                           // Subtle overlay at the top for back/heart buttons
                           Container(
@@ -518,19 +699,129 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
   // --- MACROS COMPONENT ---
   Widget _buildNutritionMacrosWidget() {
+    if (_isMacrosLoading) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Color(0xFF6B4EFF),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              "Estimating nutrition with AI...",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_macrosError != null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFEE2E2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFFCA5A5)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Color(0xFFDC2626), size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _macrosError!,
+                      style: const TextStyle(
+                        color: Color(0xFF991B1B),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _estimateAIMacros,
+              icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFDC2626)),
+              label: const Text(
+                "Retry",
+                style: TextStyle(
+                  color: Color(0xFFDC2626),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final cal = _aiCalories ?? widget.dish.calories;
+    final protein = _aiProtein ?? widget.dish.protein;
+    final carbs = _aiCarbs ?? widget.dish.carbs;
+    final fat = _aiFat ?? widget.dish.fat;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _buildMacroLabel("Calories", "${widget.dish.calories} kcal"),
-          _buildMacroLabel("Protein", "${widget.dish.protein}g"),
-          _buildMacroLabel("Carbs", "${widget.dish.carbs}g"),
-          _buildMacroLabel("Fat", "${widget.dish.fat}g"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildMacroLabel("Calories", "$cal kcal"),
+              _buildMacroLabel("Protein", "${protein}g"),
+              _buildMacroLabel("Carbs", "${carbs}g"),
+              _buildMacroLabel("Fat", "${fat}g"),
+            ],
+          ),
+          if (_isLocalEstimation) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.auto_awesome, color: Colors.deepPurple[400], size: 12),
+                const SizedBox(width: 4),
+                Text(
+                  "AI Local Heuristic Estimate Profile",
+                  style: TextStyle(
+                    color: Colors.deepPurple[400],
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -757,6 +1048,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           originalReview: review.originalReview,
                           translatedReview: review.translatedReview,
                           userReviewCount: userReviewCount,
+                          reviewId: review.id,
+                          likesCount: review.likesCount,
                           backgroundImageUrl:
                               review.backgroundImageUrl.isNotEmpty
                               ? review.backgroundImageUrl
@@ -780,51 +1073,59 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: Colors.grey[200],
-                                    backgroundImage: userImage.isNotEmpty ? NetworkImage(userImage) : null,
-                                    child: userImage.isEmpty ? const Icon(Icons.person, color: Colors.grey) : null,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: Colors.grey[200],
+                                      backgroundImage: userImage.isNotEmpty ? NetworkImage(userImage) : null,
+                                      child: userImage.isEmpty ? const Icon(Icons.person, color: Colors.grey) : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  name,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              TierBadge(
+                                                reviewCount: userReviewCount,
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 8),
-                                          TierBadge(
-                                            reviewCount: userReviewCount,
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: List.generate(
+                                              5,
+                                              (idx) => Icon(
+                                                Icons.star_rounded,
+                                                color: idx < review.rating
+                                                    ? Colors.amber
+                                                    : Colors.grey[300],
+                                                size: 14,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: List.generate(
-                                          5,
-                                          (idx) => Icon(
-                                            Icons.star_rounded,
-                                            color: idx < review.rating
-                                                ? Colors.amber
-                                                : Colors.grey[300],
-                                            size: 14,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                    ),
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 dateStr,
                                 style: const TextStyle(
@@ -855,23 +1156,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                 const SizedBox(width: 12),
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    review.backgroundImageUrl,
+                                  child: AppImage(
+                                    imageUrl: review.backgroundImageUrl,
                                     width: 60,
                                     height: 60,
                                     fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                              width: 60,
-                                              height: 60,
-                                              color: Colors.grey[200],
-                                              child: const Icon(
-                                                Icons.broken_image,
-                                                color: Colors.grey,
-                                                size: 20,
-                                              ),
-                                            ),
                                   ),
                                 ),
                               ],

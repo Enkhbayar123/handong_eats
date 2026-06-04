@@ -364,6 +364,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         openTime: '',
         closeTime: '',
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: '',
       ),
     );
 
@@ -528,11 +529,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
             stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox();
-              final restaurants = snapshot.data!.docs;
+              final restaurantDocs = snapshot.data!.docs;
               return Column(
-                children: restaurants.map((doc) {
-                  final name = doc['name'] as String? ?? '';
-                  return _buildArchiveRestaurantCard(name);
+                children: restaurantDocs.map((doc) {
+                  final restaurant = RestaurantModel.fromFirestore(doc);
+                  return _buildArchiveRestaurantCard(restaurant);
                 }).toList(),
               );
             },
@@ -542,7 +543,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildArchiveRestaurantCard(String name) {
+  Widget _buildArchiveRestaurantCard(RestaurantModel restaurant) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -565,7 +566,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             vertical: 4,
           ),
           title: Text(
-            name,
+            restaurant.name,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           trailing: const Icon(Icons.chevron_right, color: Colors.grey),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 import '../widgets/tier_badge.dart';
 
 class ReviewDetailScreen extends StatefulWidget {
@@ -10,8 +12,9 @@ class ReviewDetailScreen extends StatefulWidget {
   final String originalReview;
   final String translatedReview;
   final int userReviewCount;
-  final String?
-  backgroundImageUrl; // Optional, in case they didn't upload a photo
+  final String reviewId;
+  final int likesCount;
+  final String? backgroundImageUrl; // Optional, in case they didn't upload a photo
 
   const ReviewDetailScreen({
     super.key,
@@ -22,6 +25,8 @@ class ReviewDetailScreen extends StatefulWidget {
     required this.originalReview,
     required this.translatedReview,
     required this.userReviewCount,
+    required this.reviewId,
+    required this.likesCount,
     this.backgroundImageUrl,
   });
 
@@ -114,40 +119,45 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                         backgroundColor: Colors.grey[800],
                       ),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                widget.username,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Theme(
-                                data: Theme.of(context).copyWith(
-                                  iconTheme: const IconThemeData(
-                                    color: Colors.white,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.username,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                child: TierBadge(
-                                  reviewCount: widget.userReviewCount,
+                                const SizedBox(width: 8),
+                                Theme(
+                                  data: Theme.of(context).copyWith(
+                                    iconTheme: const IconThemeData(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  child: TierBadge(
+                                    reviewCount: widget.userReviewCount,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            widget.date,
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 14,
+                              ],
                             ),
-                          ),
-                        ],
+                            Text(
+                              widget.date,
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -189,27 +199,77 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Translate Button
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _isTranslated = !_isTranslated;
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white54),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                  Row(
+                    children: [
+                      // Translate Button
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isTranslated = !_isTranslated;
+                          });
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white54),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        icon: Icon(
+                          _isTranslated ? Icons.check : Icons.g_translate,
+                          size: 18,
+                        ),
+                        label: Text(
+                          _isTranslated ? "Show Original" : "Translate to English",
+                        ),
                       ),
-                    ),
-                    icon: Icon(
-                      _isTranslated ? Icons.check : Icons.g_translate,
-                      size: 18,
-                    ),
-                    label: Text(
-                      _isTranslated ? "Show Original" : "Translate to English",
-                    ),
+                      const SizedBox(width: 12),
+                      // Like Button
+                      StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance.collection('reviews').doc(widget.reviewId).snapshots(),
+                        builder: (context, snap) {
+                          int likes = widget.likesCount;
+                          List<String> likedBy = [];
+                          if (snap.hasData && snap.data!.exists) {
+                            final data = snap.data!.data() as Map<String, dynamic>? ?? {};
+                            likes = data['likesCount'] ?? 0;
+                            likedBy = List<String>.from(data['likedBy'] ?? []);
+                          }
+                          final uid = AuthService.currentUser?.uid ?? 'user_1';
+                          final isLiked = likedBy.contains(uid);
+
+                          return ElevatedButton.icon(
+                            onPressed: () async {
+                              final ref = FirebaseFirestore.instance.collection('reviews').doc(widget.reviewId);
+                              if (isLiked) {
+                                await ref.update({
+                                  'likedBy': FieldValue.arrayRemove([uid]),
+                                  'likesCount': FieldValue.increment(-1),
+                                });
+                              } else {
+                                await ref.update({
+                                  'likedBy': FieldValue.arrayUnion([uid]),
+                                  'likesCount': FieldValue.increment(1),
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isLiked ? Colors.redAccent : Colors.white12,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border,
+                              size: 18,
+                            ),
+                            label: Text("$likes Likes"),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20), // Extra padding at the bottom
                 ],

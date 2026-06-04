@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 
@@ -17,7 +18,7 @@ class DatabaseSeeder {
         dietaryLabels: ['Halal', 'Lactose-Free'],
         allergies: ['Peanuts'],
         pushNotificationsEnabled: true,
-        favoriteMenuIds: ['rest_1_m2', 'rest_8_m3'],
+        favoriteMenuIds: ['rest_new_dish_1', 'rest_new_dish_2'],
         country: 'South Korea',
         spiceTolerance: 'Hot',
         preferredTastes: ['Spicy', 'Savory'],
@@ -32,7 +33,7 @@ class DatabaseSeeder {
         dietaryLabels: ['Vegetarian'],
         allergies: [],
         pushNotificationsEnabled: false,
-        favoriteMenuIds: ['rest_5_m1', 'rest_3_m1'],
+        favoriteMenuIds: ['rest_new_dish_3', 'rest_new_dish_4'],
         country: 'United States',
         spiceTolerance: 'Mild',
         preferredTastes: ['Sweet', 'Savory'],
@@ -119,6 +120,7 @@ class DatabaseSeeder {
         openTime: "08:00",
         closeTime: "19:00",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_2',
@@ -126,6 +128,7 @@ class DatabaseSeeder {
         openTime: "11:00",
         closeTime: "20:00",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_3',
@@ -133,6 +136,7 @@ class DatabaseSeeder {
         openTime: "11:30",
         closeTime: "19:00",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_4',
@@ -140,6 +144,7 @@ class DatabaseSeeder {
         openTime: "11:00",
         closeTime: "19:00",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_5',
@@ -147,6 +152,7 @@ class DatabaseSeeder {
         openTime: "11:30",
         closeTime: "19:30",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_6',
@@ -154,6 +160,7 @@ class DatabaseSeeder {
         openTime: "11:00",
         closeTime: "18:00",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_7',
@@ -161,6 +168,7 @@ class DatabaseSeeder {
         openTime: "08:00",
         closeTime: "15:00",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80",
       ),
       RestaurantModel(
         id: 'rest_8',
@@ -168,6 +176,7 @@ class DatabaseSeeder {
         openTime: "11:00",
         closeTime: "19:30",
         currentStatus: CrowdedStatus.unknown,
+        imageUrl: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=200&q=80",
       ),
     ];
     for (var r in restaurants) {
@@ -177,353 +186,88 @@ class DatabaseSeeder {
 
   static Future<void> seedMenuItems() async {
     final collection = _firestore.collection('menu_items');
-    final items = [
-      // Mom's Kitchen
-      MenuItemModel(
-        id: 'rest_1_m1',
-        restaurantId: 'rest_1',
-        name: "Today's Special (Changes Daily)",
-        price: 6000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
-        description: 'Freshly prepared daily special.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 600,
-        protein: 30,
-        carbs: 65,
-        fat: 20,
-      ),
-      MenuItemModel(
-        id: 'rest_1_m2',
-        restaurantId: 'rest_1',
-        name: "Classic Bibimbap",
-        price: 5500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
-        description: 'Healthy and traditional bibimbap with fresh vegetables.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 500,
-        protein: 15,
-        carbs: 80,
-        fat: 12,
-      ),
-      MenuItemModel(
-        id: 'rest_1_m3',
-        restaurantId: 'rest_1',
-        name: "Handmade Tonkatsu",
-        price: 6500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
-        description: 'Crispy fried pork cutlet with savory sauce.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 800,
-        protein: 35,
-        carbs: 70,
-        fat: 40,
-      ),
+    final items = <MenuItemModel>[];
 
-      // Sola Fide
-      MenuItemModel(
-        id: 'rest_2_m1',
-        restaurantId: 'rest_2',
-        name: "Sola Fide Static 1",
-        price: 5000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
-        description: 'Standard static meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 450,
-        protein: 20,
-        carbs: 60,
-        fat: 15,
-      ),
-      MenuItemModel(
-        id: 'rest_2_m2',
-        restaurantId: 'rest_2',
-        name: "Sola Fide Static 2",
-        price: 5000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80',
-        description: 'Standard static meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 480,
-        protein: 25,
-        carbs: 55,
-        fat: 18,
-      ),
-      MenuItemModel(
-        id: 'rest_2_m3',
-        restaurantId: 'rest_2',
-        name: "Sola Fide Static 3",
-        price: 5000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
-        description: 'Standard static meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 500,
-        protein: 22,
-        carbs: 65,
-        fat: 16,
-      ),
-
-      // Goshen
-      MenuItemModel(
-        id: 'rest_3_m1',
-        restaurantId: 'rest_3',
-        name: "Goshen Menu 1",
-        price: 4500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
-        description: 'Goshen standard meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 400,
-        protein: 18,
-        carbs: 50,
-        fat: 12,
-      ),
-      MenuItemModel(
-        id: 'rest_3_m2',
-        restaurantId: 'rest_3',
-        name: "Goshen Menu 2",
-        price: 4500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
-        description: 'Goshen standard meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 420,
-        protein: 20,
-        carbs: 55,
-        fat: 14,
-      ),
-      MenuItemModel(
-        id: 'rest_3_m3',
-        restaurantId: 'rest_3',
-        name: "Goshen Menu 3",
-        price: 4500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
-        description: 'Goshen standard meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 440,
-        protein: 22,
-        carbs: 60,
-        fat: 16,
-      ),
-      MenuItemModel(
-        id: 'rest_3_m4',
-        restaurantId: 'rest_3',
-        name: "Goshen Menu 4",
-        price: 4500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
-        description: 'Goshen standard meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 410,
-        protein: 19,
-        carbs: 52,
-        fat: 13,
-      ),
-      MenuItemModel(
-        id: 'rest_3_m5',
-        restaurantId: 'rest_3',
-        name: "Goshen Menu 5",
-        price: 4500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80',
-        description: 'Goshen standard meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 460,
-        protein: 24,
-        carbs: 58,
-        fat: 15,
-      ),
-
-      // Myeongsong
-      MenuItemModel(
-        id: 'rest_4_m1',
-        restaurantId: 'rest_4',
-        name: "Myeongsong Meal A",
-        price: 5500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
-        description: 'Traditional Korean soup and sides.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 550,
-        protein: 25,
-        carbs: 65,
-        fat: 18,
-      ),
-      MenuItemModel(
-        id: 'rest_4_m2',
-        restaurantId: 'rest_4',
-        name: "Myeongsong Meal B",
-        price: 6000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
-        description: 'Stir-fry with rice and sides.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 600,
-        protein: 30,
-        carbs: 70,
-        fat: 22,
-      ),
-
-      // Grace Table
-      MenuItemModel(
-        id: 'rest_5_m1',
-        restaurantId: 'rest_5',
-        name: "Grace Table Set A",
-        price: 7000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
-        description: 'Premium balanced meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 550,
-        protein: 40,
-        carbs: 50,
-        fat: 15,
-      ),
-      MenuItemModel(
-        id: 'rest_5_m2',
-        restaurantId: 'rest_5',
-        name: "Grace Table Set B",
-        price: 7500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
-        description: 'Premium hearty meal.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 650,
-        protein: 45,
-        carbs: 60,
-        fat: 20,
-      ),
-
-      // Dasu Handong
-      MenuItemModel(
-        id: 'rest_6_m1',
-        restaurantId: 'rest_6',
-        name: "Daily Changing Menu",
-        price: 5000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
-        description: 'A surprise every day.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 500,
-        protein: 25,
-        carbs: 60,
-        fat: 15,
-      ),
-
-      // Deun Deun
-      MenuItemModel(
-        id: 'rest_7_m1',
-        restaurantId: 'rest_7',
-        name: "Bento Box 1",
-        price: 4500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80',
-        description: 'Convenient and filling student bento.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 550,
-        protein: 20,
-        carbs: 75,
-        fat: 18,
-      ),
-      MenuItemModel(
-        id: 'rest_7_m2',
-        restaurantId: 'rest_7',
-        name: "Bento Box 2",
-        price: 5000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
-        description: 'Premium bento with extra sides.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 650,
-        protein: 25,
-        carbs: 80,
-        fat: 22,
-      ),
-
-      // Korean Table
-      MenuItemModel(
-        id: 'rest_8_m1',
-        restaurantId: 'rest_8',
-        name: "Daily Korean Meal",
-        price: 5500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80',
-        description: 'Authentic daily Korean food.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 550,
-        protein: 25,
-        carbs: 70,
-        fat: 15,
-      ),
-      MenuItemModel(
-        id: 'rest_8_m2',
-        restaurantId: 'rest_8',
-        name: "Korean Table 1",
-        price: 6000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=500&q=80',
-        description: 'Classic stew and rice.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 600,
-        protein: 30,
-        carbs: 65,
-        fat: 18,
-      ),
-      MenuItemModel(
-        id: 'rest_8_m3',
-        restaurantId: 'rest_8',
-        name: "Ramyeon",
-        price: 3500,
-        imageUrl:
-            'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80',
-        description: 'Spicy and hot ramen.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 450,
-        protein: 10,
-        carbs: 70,
-        fat: 15,
-      ),
-      MenuItemModel(
-        id: 'rest_8_m4',
-        restaurantId: 'rest_8',
-        name: "Fried Rice",
-        price: 5000,
-        imageUrl:
-            'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80',
-        description: 'Savory fried rice with egg.',
-        averageRating: 0.0,
-        reviewCount: 0,
-        calories: 580,
-        protein: 15,
-        carbs: 85,
-        fat: 20,
-      ),
+    final newImageFiles = [
+      'KakaoTalk_Photo_2026-05-30-22-04-17 001.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-18 002.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-18 003.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-19 004.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-19 005.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-50 001.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 002.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 003.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 004.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 005.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 006.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 007.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 008.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-52 009.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-52 010.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-52 011.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-53 012.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-53 013.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-53 014.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-54 015.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-54 016.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-55 017.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-55 018.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-56 019.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-56 020.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-56 021.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-57 022.jpeg',
     ];
+
+    final newDishNames = [
+      'Soondubu Jjigae',
+      'Pork Cutlet',
+      'Tteokbbugi',
+      'Tansuyuk',
+      'GunamulHejangug',
+      'Jjanbbun',
+      'Pork Cutlet',
+      'Tteokbbugi',
+      'Tansuyuk',
+      'GunamulHejangug',
+      'Soondubu Jjigae',
+      'Dakkalguksu',
+      'Cutlet',
+      'Cutlet',
+      'Jjimdak',
+      'Jjimdak',
+      'Ramen',
+      'DakKanjon',
+      'Ramen',
+      'Malatang',
+      'Yugkaejang',
+      '흰쌀밥, 콩나물국, 김치, 제육김치볶음, 미역줄기볶음, 순두부',
+      'Tansuyuk',
+      'BudaeJjigae',
+      'TuejiGukbab',
+      'Fried Rice',
+      'Kimchi Jjigae',
+    ];
+
+    for (int i = 0; i < newImageFiles.length; i++) {
+      final restNum = (i % 8) + 1;
+      items.add(
+        MenuItemModel(
+          id: 'rest_new_dish_${i + 1}',
+          restaurantId: 'rest_$restNum',
+          name: newDishNames[i],
+          price: 5500 + (i * 150),
+          imageUrl: 'lib/images/${newImageFiles[i]}',
+          description: 'A newly seeded delicious ${newDishNames[i]} served fresh at our campus cafeteria.',
+          averageRating: double.parse((4.0 + (i % 10) * 0.1).toStringAsFixed(1)),
+          reviewCount: 15 + (i * 2),
+          calories: 480 + (i * 8),
+          protein: 12 + (i % 5),
+          carbs: 65 + (i % 8),
+          fat: 10 + (i % 4),
+        ),
+      );
+    }
+
     for (var item in items) {
       await collection.doc(item.id).set(item.toMap());
     }
@@ -541,7 +285,7 @@ class DatabaseSeeder {
       MealLogModel(
         id: 'log_1',
         userId: 'user_1',
-        menuItemId: 'rest_1_m2',
+        menuItemId: 'rest_new_dish_1',
         date: DateTime.now(),
         mealType: 'Lunch',
         rating: 5,
@@ -552,7 +296,7 @@ class DatabaseSeeder {
       MealLogModel(
         id: 'log_2',
         userId: 'user_1',
-        menuItemId: 'rest_8_m3',
+        menuItemId: 'rest_new_dish_2',
         date: DateTime.now().subtract(const Duration(days: 1)),
         mealType: 'Dinner',
         rating: 4,
@@ -574,85 +318,170 @@ class DatabaseSeeder {
       await doc.reference.delete();
     }
 
-    final reviews = [
-      ReviewModel(
-        id: 'review_1',
-        userId: 'user_1',
-        menuItemId: 'rest_1_m2',
-        rating: 5,
-        originalReview: '비빔밥 최고에요!',
-        translatedReview: 'Bibimbap is the best!',
-        datePosted: DateTime.now().subtract(const Duration(days: 1)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=800&q=80',
-      ),
-      ReviewModel(
-        id: 'review_2',
-        userId: 'user_2',
-        menuItemId: 'rest_5_m1',
-        rating: 5,
-        originalReview: 'The best meal on campus.',
-        translatedReview: '캠퍼스 내 최고의 식사.',
-        datePosted: DateTime.now().subtract(const Duration(days: 2)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=800&q=80',
-      ),
-      ReviewModel(
-        id: 'review_3',
-        userId: 'user_3',
-        menuItemId: 'rest_1_m2',
-        rating: 4,
-        originalReview: 'This is my 100th time eating here, still good.',
-        translatedReview: '이곳에서 100번째 먹는 건데 여전히 맛있네요.',
-        datePosted: DateTime.now().subtract(const Duration(days: 3)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=800&q=80',
-      ),
-      ReviewModel(
-        id: 'review_4',
-        userId: 'user_4',
-        menuItemId: 'rest_1_m2',
-        rating: 5,
-        originalReview: 'Very healthy and filling.',
-        translatedReview: '매우 건강하고 든든합니다.',
-        datePosted: DateTime.now().subtract(const Duration(days: 4)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
-      ),
-      ReviewModel(
-        id: 'review_5',
-        userId: 'user_5',
-        menuItemId: 'rest_1_m2',
-        rating: 3,
-        originalReview: 'A bit too spicy today.',
-        translatedReview: '오늘은 조금 맵네요.',
-        datePosted: DateTime.now().subtract(const Duration(days: 5)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=800&q=80',
-      ),
-      ReviewModel(
-        id: 'review_6',
-        userId: 'user_6',
-        menuItemId: 'rest_1_m2',
-        rating: 4,
-        originalReview: 'Loved the fresh veggies.',
-        translatedReview: '신선한 채소가 좋았어요.',
-        datePosted: DateTime.now().subtract(const Duration(days: 6)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
-      ),
-      ReviewModel(
-        id: 'review_7',
-        userId: 'user_7',
-        menuItemId: 'rest_1_m2',
-        rating: 5,
-        originalReview: 'Highly recommended for lunch!',
-        translatedReview: '점심 식사로 강력 추천합니다!',
-        datePosted: DateTime.now().subtract(const Duration(days: 7)),
-        backgroundImageUrl:
-            'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80',
-      ),
+    final newDishNames = [
+      'Soondubu Jjigae',
+      'Pork Cutlet',
+      'Tteokbbugi',
+      'Tansuyuk',
+      'GunamulHejangug',
+      'Jjanbbun',
+      'Pork Cutlet',
+      'Tteokbbugi',
+      'Tansuyuk',
+      'GunamulHejangug',
+      'Soondubu Jjigae',
+      'Dakkalguksu',
+      'Cutlet',
+      'Cutlet',
+      'Jjimdak',
+      'Jjimdak',
+      'Ramen',
+      'DakKanjon',
+      'Ramen',
+      'Malatang',
+      'Yugkaejang',
+      '흰쌀밥, 콩나물국, 김치, 제육김치볶음, 미역줄기볶음, 순두부',
+      'Tansuyuk',
+      'BudaeJjigae',
+      'TuejiGukbab',
+      'Fried Rice',
+      'Kimchi Jjigae',
     ];
+
+    final newImageFiles = [
+      'KakaoTalk_Photo_2026-05-30-22-04-17 001.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-18 002.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-18 003.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-19 004.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-19 005.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-50 001.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 002.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 003.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 004.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 005.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 006.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 007.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-51 008.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-52 009.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-52 010.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-52 011.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-53 012.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-53 013.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-53 014.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-54 015.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-54 016.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-55 017.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-55 018.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-56 019.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-56 020.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-56 021.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-57 022.jpeg',
+    ];
+
+    final templates = {
+      'stew': [
+        ['국물이 아주 깊고 맛있어요! 따뜻해서 온몸이 녹네요.', 'The soup is very deep and delicious! Warm and soothing.'],
+        ['얼큰하고 시원해서 해장용으로 딱입니다.', 'Spicy and refreshing, perfect for hangover cure.'],
+        ['두부와 채소가 듬뿍 들어있어서 든든해요.', 'Full of tofu and vegetables, very filling.'],
+        ['기대 이상으로 진하고 정성이 가득한 찌개입니다.', 'Beyond expectations, rich and full of sincerity stew.'],
+        ['엄마가 해준 집밥 같은 따뜻함이 느껴집니다.', 'Warmth like mom\'s home-cooked food.'],
+      ],
+      'cutlet': [
+        ['겉은 바삭하고 속은 촉촉해서 정말 맛있어요!', 'Crispy outside and juicy inside, absolutely delicious!'],
+        ['고기가 두툼하고 잡내가 전혀 없어서 만족스럽습니다.', 'The meat is thick and completely odorless, very satisfying.'],
+        ['소스가 너무 달지 않고 고기랑 아주 잘 어울려요.', 'The sauce is not too sweet and goes extremely well with the meat.'],
+        ['바삭바삭한 식감이 끝까지 유지되어 훌륭합니다.', 'The crispy texture stays until the very end, excellent.'],
+        ['학식 퀄리티를 뛰어넘는 훌륭한 갓 튀긴 돈까스!', 'Excellent freshly-fried cutlet exceeding school meal quality!'],
+      ],
+      'spicy': [
+        ['매콤하고 쫄깃해서 스트레스가 다 풀립니다!', 'Spicy and chewy, blows all stress away!'],
+        ['양념이 중독성 있어서 계속 손이 가요.', 'The seasoning is addictive, keeps me reaching for more.'],
+        ['자극적이지 않으면서 맛있게 매운맛이라 강추합니다.', 'Deliciously spicy without being overly irritating, highly recommend.'],
+        ['떡과 어묵의 조화가 예술이에요.', 'The harmony of rice cakes and fish cakes is art.'],
+        ['매운맛 좋아하는 분들이라면 무조건 좋아할 맛!', 'A flavor anyone who loves spicy food will definitely love!'],
+      ],
+      'noodles': [
+        ['면발이 쫄깃쫄깃하고 국물이 깔끔해요.', 'The noodles are chewy and the broth is clean.'],
+        ['비오는 날 먹기에 이보다 완벽할 순 없어요.', 'Nothing could be more perfect than having this on a rainy day.'],
+        ['차오르는 불맛과 신선한 해산물이 가득하네요.', 'Full of smoky flavor and fresh seafood.'],
+        ['가성비 최고이고 한 그릇 다 비웠어요.', 'Best value for money, cleared the whole bowl.'],
+        ['뜨끈한 면 요리가 땡길 때 최선의 선택입니다.', 'Best choice when craving hot noodle dishes.'],
+      ],
+      'rice': [
+        ['밥알이 고슬고슬하게 잘 볶아졌고 정말 고소해요.', 'The rice is fried fluffy and is extremely savory.'],
+        ['제육볶음과 반찬 구성이 매우 조화롭습니다.', 'The pork stir-fry and side dishes are highly harmonious.'],
+        ['든든한 한 끼 식사로 영양 밸런스가 참 좋네요.', 'Great nutritional balance for a filling meal.'],
+        ['엄청 친절하게 많이 주셔서 감동받았습니다.', 'Moved by the friendly and generous portion.'],
+        ['매일 먹어도 질리지 않을 담백한 집밥 스타일!', 'Light home-meal style that you won\'t get tired of daily!'],
+      ],
+    };
+
+    final random = Random();
+    final List<ReviewModel> reviews = [];
+
+    for (int i = 0; i < 100; i++) {
+      // Pick random dish
+      final dishIndex = random.nextInt(newDishNames.length);
+      final dishName = newDishNames[dishIndex];
+      final menuItemId = 'rest_new_dish_${dishIndex + 1}';
+
+      // Pick category
+      String cat = 'stew';
+      if (dishName.contains('Cutlet') || dishName.contains('Cutlet') || dishName.contains('Tansuyuk') || dishName.contains('Jjimdak')) {
+        cat = 'cutlet';
+      } else if (dishName.contains('Tteok') || dishName.contains('Malatang')) {
+        cat = 'spicy';
+      } else if (dishName.contains('Ramen') || dishName.contains('Dakkalguksu') || dishName.contains('Jjanbbun')) {
+        cat = 'noodles';
+      } else if (dishName.contains('Rice') || dishName.contains('흰쌀밥') || dishName.contains('Gukbab')) {
+        cat = 'rice';
+      }
+
+      // Pick random template
+      final options = templates[cat]!;
+      final template = options[random.nextInt(options.length)];
+
+      // Pick random user
+      final userIndex = random.nextInt(7) + 1;
+      final userId = 'user_$userIndex';
+
+      // Pick random rating (3 to 5)
+      final rating = random.nextInt(3) + 3;
+
+      // Pick random likes count (0 to 7)
+      final likesCount = random.nextInt(8); // 0 to 7
+      final List<String> likedBy = [];
+      final List<int> userPool = [1, 2, 3, 4, 5, 6, 7];
+      userPool.shuffle(random);
+      for (int k = 0; k < likesCount; k++) {
+        likedBy.add('user_${userPool[k]}');
+      }
+
+      // 40% chance of background image, 60% chance empty
+      final hasImage = random.nextDouble() < 0.4;
+      final backgroundImageUrl = hasImage ? 'lib/images/${newImageFiles[dishIndex]}' : '';
+
+      // Random date in the last 30 days
+      final daysAgo = random.nextInt(30);
+      final hoursAgo = random.nextInt(24);
+      final datePosted = DateTime.now().subtract(Duration(days: daysAgo, hours: hoursAgo));
+
+      reviews.add(
+        ReviewModel(
+          id: 'seeded_review_${i + 1}',
+          userId: userId,
+          menuItemId: menuItemId,
+          rating: rating,
+          originalReview: template[0],
+          translatedReview: template[1],
+          datePosted: datePosted,
+          backgroundImageUrl: backgroundImageUrl,
+          likesCount: likesCount,
+          likedBy: likedBy,
+        ),
+      );
+    }
+
     for (var r in reviews) {
       await collection.doc(r.id).set(r.toMap());
     }

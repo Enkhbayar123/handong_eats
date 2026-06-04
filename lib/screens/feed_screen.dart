@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
 import '../models/models.dart';
 import '../widgets/tier_badge.dart';
 import '../services/localization.dart';
+import '../widgets/app_image.dart';
+import '../services/auth_service.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -124,6 +125,8 @@ class _FeedCardState extends State<_FeedCard> {
   void initState() {
     super.initState();
     _loadData();
+    final uid = AuthService.currentUser?.uid ?? 'user_1';
+    _isLiked = widget.review.likedBy.contains(uid);
   }
 
   Future<void> _loadData() async {
@@ -184,22 +187,11 @@ class _FeedCardState extends State<_FeedCard> {
       fit: StackFit.expand,
       children: [
         // --- LAYER 1: Full-bleed background image ---
-        if (bgImage.isNotEmpty)
-          bgImage.startsWith('http')
-              ? Image.network(
-                  bgImage,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: Colors.grey[900]),
-                )
-              : Image.file(
-                  File(bgImage),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: Colors.grey[900]),
-                )
-        else
-          Container(color: Colors.grey[900]),
+        AppImage(
+          imageUrl: bgImage,
+          fit: BoxFit.cover,
+          errorWidget: Container(color: Colors.grey[900]),
+        ),
 
         // --- LAYER 2: Gradient overlay for readability ---
         Container(
@@ -290,30 +282,35 @@ class _FeedCardState extends State<_FeedCard> {
                   : null,
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      _user?.name ?? "...",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          _user?.name ?? "...",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    if (_user != null) ...[
-                      const SizedBox(width: 6),
-                      TierBadge(reviewCount: _user!.reviewCount),
+                      if (_user != null) ...[
+                        const SizedBox(width: 6),
+                        TierBadge(reviewCount: _user!.reviewCount),
+                      ],
                     ],
-                  ],
-                ),
-                Text(
-                  _timeAgo(review.datePosted),
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                ),
-              ],
+                  ),
+                  Text(
+                    _timeAgo(review.datePosted),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -360,13 +357,48 @@ class _FeedCardState extends State<_FeedCard> {
         _ActionButton(
           icon: _isLiked ? Icons.favorite : Icons.favorite_border,
           color: _isLiked ? Colors.redAccent : Colors.white,
-          onTap: () {
-            setState(() {
-              _isLiked = !_isLiked;
-            });
+          onTap: () async {
+            final uid = AuthService.currentUser?.uid ?? 'user_1';
+            final ref = FirebaseFirestore.instance.collection('reviews').doc(widget.review.id);
+            if (_isLiked) {
+              setState(() {
+                _isLiked = false;
+              });
+              await ref.update({
+                'likedBy': FieldValue.arrayRemove([uid]),
+                'likesCount': FieldValue.increment(-1),
+              });
+            } else {
+              setState(() {
+                _isLiked = true;
+              });
+              await ref.update({
+                'likedBy': FieldValue.arrayUnion([uid]),
+                'likesCount': FieldValue.increment(1),
+              });
+            }
           },
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 4),
+        StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance.collection('reviews').doc(widget.review.id).snapshots(),
+          builder: (context, snap) {
+            int likes = widget.review.likesCount;
+            if (snap.hasData && snap.data!.exists) {
+              final data = snap.data!.data() as Map<String, dynamic>? ?? {};
+              likes = data['likesCount'] ?? 0;
+            }
+            return Text(
+              "$likes",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
 
         // Translate button
         _ActionButton(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/app_image.dart';
 
 class EditLogScreen extends StatefulWidget {
   final String logId;
@@ -105,12 +106,12 @@ class _EditLogScreenState extends State<EditLogScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      widget.imageUrl,
+                    child: AppImage(
+                      imageUrl: widget.imageUrl,
                       width: 80,
                       height: 80,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
+                      errorWidget: Container(
                         width: 80,
                         height: 80,
                         color: Colors.grey[200],

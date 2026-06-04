@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 import 'dish_detail_screen.dart';
+import '../widgets/app_image.dart';
 
 class MenuArchiveScreen extends StatelessWidget {
   final DateTime archiveDate;
@@ -166,12 +167,12 @@ class MenuArchiveScreen extends StatelessWidget {
               // Food Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  dish.imageUrl,
+                child: AppImage(
+                  imageUrl: dish.imageUrl,
                   width: 70,
                   height: 70,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+                  errorWidget: Container(
                     width: 70,
                     height: 70,
                     color: Colors.grey[200],
