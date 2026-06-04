@@ -112,7 +112,7 @@ class AuthService {
           uid: 'user_1',
           email: 'student1@handong.ac.kr',
           studentId: '22000001',
-          name: 'Jiwon Kim',
+          name: '김지원',
           profileImageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80',
           dietaryLabels: ['Halal', 'Lactose-Free'],
           allergies: ['Peanuts'],
