@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 import '../widgets/add_review_bottom_sheet.dart';
+import '../widgets/app_image.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PhotoGalleryScreen extends StatelessWidget {
@@ -96,8 +97,8 @@ class PhotoGalleryScreen extends StatelessWidget {
                         fit: StackFit.expand,
                         children: [
                           InteractiveViewer(
-                            child: Image.network(
-                              photos[index],
+                            child: AppImage(
+                              imageUrl: photos[index],
                               fit: BoxFit.contain,
                             ),
                           ),
@@ -115,14 +116,9 @@ class PhotoGalleryScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: Image.network(
-                  photos[index],
+                child: AppImage(
+                  imageUrl: photos[index],
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: Colors.grey[200],
-                    child:
-                        const Icon(Icons.broken_image, color: Colors.grey),
-                  ),
                 ),
               );
             },

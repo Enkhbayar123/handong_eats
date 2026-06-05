@@ -9,6 +9,7 @@ import '../models/models.dart';
 import '../widgets/tier_badge.dart';
 import '../services/localization.dart';
 import '../services/auth_service.dart';
+import '../services/image_uploader.dart';
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
 
@@ -82,10 +83,36 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   Future<void> _updateProfileImage(String activeUserId, String path) async {
     try {
+      String imageUrl = path;
+      if (path.isNotEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Uploading profile picture..."),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        final uploadedUrl = await ImageUploader.uploadImage(path);
+        if (uploadedUrl != null) {
+          imageUrl = uploadedUrl;
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Failed to upload profile picture. Please try again."),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(activeUserId)
-          .update({'profileImageUrl': path});
+          .update({'profileImageUrl': imageUrl});
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

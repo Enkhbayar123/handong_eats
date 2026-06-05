@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
+import '../services/image_uploader.dart';
 import 'main_navigation.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -312,6 +313,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _isLoading = true;
     });
 
+    String? profileImageUrl;
+    if (_selectedLocalPath != null) {
+      profileImageUrl = await ImageUploader.uploadImage(_selectedLocalPath!);
+    }
+
     final success = await AuthService.signUp(
       email: _emailController.text,
       password: _passwordController.text,
@@ -323,7 +329,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       allergies: _selectedAllergies,
       preferredTastes: _selectedFlavors,
       preferredLanguage: _selectedLanguage,
-      profileImageUrl: _selectedLocalPath,
+      profileImageUrl: profileImageUrl,
     );
 
     setState(() {

@@ -1107,62 +1107,67 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: Colors.grey[200],
-                                    backgroundImage: userImage.isNotEmpty
-                                        ? (userImage.startsWith('http')
-                                            ? NetworkImage(userImage)
-                                            : FileImage(File(userImage)) as ImageProvider)
-                                        : null,
-                                    child: userImage.isEmpty
-                                        ? const Icon(
-                                            Icons.person,
-                                            color: Colors.grey,
-                                          )
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                       Row(
-                                         children: [
-                                           Flexible(
-                                             child: Text(
-                                               name,
-                                               style: const TextStyle(
-                                                 fontWeight: FontWeight.bold,
-                                                 fontSize: 14,
-                                               ),
-                                               overflow: TextOverflow.ellipsis,
-                                             ),
-                                           ),
-                                           const SizedBox(width: 8),
-                                           TierBadge(
-                                             reviewCount: userReviewCount,
-                                           ),
-                                         ],
-                                       ),
-                                       const SizedBox(height: 4),
-                                       Row(
-                                         children: List.generate(
-                                           5,
-                                           (idx) => Icon(
-                                             Icons.star_rounded,
-                                             color: idx < review.rating
-                                                 ? Colors.amber
-                                                 : Colors.grey[300],
-                                             size: 14,
-                                           ),
-                                         ),
-                                       ),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: Colors.grey[200],
+                                      backgroundImage: userImage.isNotEmpty
+                                          ? (userImage.startsWith('http')
+                                              ? NetworkImage(userImage)
+                                              : FileImage(File(userImage)) as ImageProvider)
+                                          : null,
+                                      child: userImage.isEmpty
+                                          ? const Icon(
+                                              Icons.person,
+                                              color: Colors.grey,
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  name,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              TierBadge(
+                                                reviewCount: userReviewCount,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: List.generate(
+                                              5,
+                                              (idx) => Icon(
+                                                Icons.star_rounded,
+                                                color: idx < review.rating
+                                                    ? Colors.amber
+                                                    : Colors.grey[300],
+                                                size: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ],
                               ),
                               const SizedBox(width: 8),
                               Text(

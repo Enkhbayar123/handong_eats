@@ -191,62 +191,52 @@ class DatabaseSeeder {
 
     final newImageFiles = [
       'KakaoTalk_Photo_2026-05-30-22-04-17 001.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-18 002.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-18 003.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-19 004.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-19 005.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-50 001.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 002.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 003.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 004.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 005.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 006.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 007.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 008.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-52 009.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-52 010.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-52 011.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-53 012.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-53 013.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-53 014.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-54 015.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-54 016.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-55 017.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-55 018.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-56 019.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-56 020.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-56 021.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-57 022.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 002.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 003.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 004.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 005.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 006.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 007.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 008.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 009.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 010.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 011.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 012.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 013.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 014.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 015.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 016.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 017.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 018.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 019.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 020.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 021.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 022.jpeg',
     ];
 
     final newDishNames = [
-      '순두부찌개',
-      '돈까스',
-      '떡볶이',
-      '탕수육',
+      'Sundubu-jjigae',
+      'Pork cutlet',
+      'Tteok-bokki',
+      'Tangsuyuk',
       '콩나물해장국',
-      '짬뽕',
-      '돈까스',
-      '떡볶이',
-      '탕수육',
-      '콩나물해장국',
-      '순두부찌개',
-      '닭칼국수',
-      '돈까스',
-      '돈까스',
-      '찜닭',
-      '찜닭',
-      '라면',
-      '닭강정',
-      '라면',
-      '마라탕',
-      '육개장',
-      '흰쌀밥, 콩나물국, 김치, 제육김치볶음, 미역줄기볶음, 순두부',
-      '탕수육',
-      '부대찌개',
-      '돼지국밥',
-      '볶음밥',
-      '김치찌개',
+      'Sundubu-jjigae',
+      'Kal-guksu',
+      'Pork Cutlet',
+      'Pork cutlet',
+      'jjimdak',
+      'jjimdak',
+      'Ramen',
+      'Jjamppong',
+      'Ramen',
+      'Maratang',
+      'Yukgaejang',
+      'DeunDeun',
+      'Jajangmyeon',
+      'Jajangmyeon',
+      'Dwaeji-gukbap',
+      'Chicken',
+      'Kimchi-jjigae',
     ];
 
     for (int i = 0; i < newImageFiles.length; i++) {
@@ -319,27 +309,53 @@ class DatabaseSeeder {
     }
 
     final newDishNames = [
-      '순두부찌개', '돈까스', '떡볶이', '탕수육', '콩나물해장국', '짬뽕', '돈까스', '떡볶이',
-      '탕수육', '콩나물해장국', '순두부찌개', '닭칼국수', '돈까스', '돈까스', '찜닭', '찜닭',
-      '라면', '닭강정', '라면', '마라탕', '육개장', '흰쌀밥, 콩나물국, 김치, 제육김치볶음, 미역줄기볶음, 순두부',
-      '탕수육', '부대찌개', '돼지국밥', '볶음밥', '김치찌개',
+      'Sundubu-jjigae',
+      'Pork cutlet',
+      'Tteok-bokki',
+      'Tangsuyuk',
+      '콩나물해장국',
+      'Sundubu-jjigae',
+      'Kal-guksu',
+      'Pork Cutlet',
+      'Pork cutlet',
+      'jjimdak',
+      'jjimdak',
+      'Ramen',
+      'Jjamppong',
+      'Ramen',
+      'Maratang',
+      'Yukgaejang',
+      'DeunDeun',
+      'Jajangmyeon',
+      'Jajangmyeon',
+      'Dwaeji-gukbap',
+      'Chicken',
+      'Kimchi-jjigae',
     ];
 
     final newImageFiles = [
-      'KakaoTalk_Photo_2026-05-30-22-04-17 001.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-18 002.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-18 003.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-19 004.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-19 005.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-50 001.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 002.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-51 003.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 004.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-51 005.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 006.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-51 007.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-51 008.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-52 009.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-52 010.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-52 011.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-53 012.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-53 013.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-53 014.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-54 015.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-54 016.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-55 017.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-55 018.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-56 019.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-56 020.jpeg', 'KakaoTalk_Photo_2026-05-30-22-04-56 021.jpeg',
-      'KakaoTalk_Photo_2026-05-30-22-04-57 022.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 001.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 002.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 003.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 004.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 005.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 006.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 007.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 008.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 009.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 010.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 011.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 012.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 013.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 014.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 015.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 016.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 017.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 018.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 019.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 020.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 021.jpeg',
+      'KakaoTalk_Photo_2026-05-30-22-04-17 022.jpeg',
     ];
 
     final templates = {
@@ -358,13 +374,36 @@ class DatabaseSeeder {
       final dishName = newDishNames[j];
       final menuItemId = 'rest_new_dish_${j + 1}';
       String cat = 'stew';
-      if (dishName.contains('돈까스') || dishName.contains('탕수육') || dishName.contains('찜닭')) {
+      final lowerName = dishName.toLowerCase();
+      if (lowerName.contains('cutlet') ||
+          lowerName.contains('tangsuyuk') ||
+          lowerName.contains('jjimdak') ||
+          lowerName.contains('chicken') ||
+          lowerName.contains('돈까스') ||
+          lowerName.contains('탕수육') ||
+          lowerName.contains('찜닭') ||
+          lowerName.contains('닭강정')) {
         cat = 'cutlet';
-      } else if (dishName.contains('떡볶이') || dishName.contains('마라탕')) {
+      } else if (lowerName.contains('tteok-bokki') ||
+                 lowerName.contains('maratang') ||
+                 lowerName.contains('떡볶이') ||
+                 lowerName.contains('마라탕')) {
         cat = 'spicy';
-      } else if (dishName.contains('라면') || dishName.contains('닭칼국수') || dishName.contains('짬뽕')) {
+      } else if (lowerName.contains('ramen') ||
+                 lowerName.contains('jjamppong') ||
+                 lowerName.contains('kal-guksu') ||
+                 lowerName.contains('jajangmyeon') ||
+                 lowerName.contains('라면') ||
+                 lowerName.contains('닭칼국수') ||
+                 lowerName.contains('짬뽕') ||
+                 lowerName.contains('짜장면')) {
         cat = 'noodles';
-      } else if (dishName.contains('볶음밥') || dishName.contains('흰쌀밥') || dishName.contains('국밥')) {
+      } else if (lowerName.contains('deundeun') ||
+                 lowerName.contains('gukbap') ||
+                 lowerName.contains('볶음밥') ||
+                 lowerName.contains('해장국') ||
+                 lowerName.contains('국밥') ||
+                 lowerName.contains('흰쌀밥')) {
         cat = 'rice';
       }
 
