@@ -1162,6 +1162,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                                        ),
                                   ],
                                 ),
+                              ],
                               ),
                               const SizedBox(width: 8),
                               Text(
