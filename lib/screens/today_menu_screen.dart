@@ -4,6 +4,7 @@ import 'dish_detail_screen.dart';
 import '../models/models.dart';
 import '../services/localization.dart';
 import '../widgets/app_image.dart';
+import '../services/auth_service.dart';
 
 class TodayMenuScreen extends StatefulWidget {
   const TodayMenuScreen({super.key});
@@ -45,71 +46,84 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _restaurantsStream,
-        builder: (context, snapshotR) {
-          if (snapshotR.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshotR.hasData || snapshotR.data!.docs.isEmpty) {
-            return Center(
-              child: Text(
-                LocalizationService.tr("no_restaurants"),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            );
-          }
-
-          List<RestaurantModel> restaurants = snapshotR.data!.docs
-              .map((doc) => RestaurantModel.fromFirestore(doc))
-              .toList();
-
-          if (_selectedRestaurantIndex >= restaurants.length) {
-            _selectedRestaurantIndex = 0;
-          }
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(AuthService.currentUser?.uid ?? 'user_1')
+            .snapshots(),
+        builder: (context, snapshotU) {
+          final user = snapshotU.hasData && snapshotU.data!.exists
+              ? UserModel.fromFirestore(snapshotU.data!)
+              : AuthService.currentUser;
+          final userAllergies = user?.allergies ?? [];
 
           return StreamBuilder<QuerySnapshot>(
-            stream: _menuItemsStream,
-            builder: (context, snapshotM) {
-              if (snapshotM.connectionState == ConnectionState.waiting) {
+            stream: _restaurantsStream,
+            builder: (context, snapshotR) {
+              if (snapshotR.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
+              if (!snapshotR.hasData || snapshotR.data!.docs.isEmpty) {
+                return Center(
+                  child: Text(
+                    LocalizationService.tr("no_restaurants"),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                );
+              }
 
-              List<MenuItemModel> allMeals =
-                  snapshotM.data?.docs
-                      .map((doc) => MenuItemModel.fromFirestore(doc))
-                      .toList() ??
-                  [];
-
-              // Compute podium (Top 3 rated items)
-              List<MenuItemModel> sortedMeals = List.from(allMeals);
-              sortedMeals.sort(
-                (a, b) => b.averageRating.compareTo(a.averageRating),
-              );
-              List<MenuItemModel> podiumMeals = sortedMeals.take(3).toList();
-
-              // Get active restaurant's meals
-              RestaurantModel activeRestaurant =
-                  restaurants[_selectedRestaurantIndex];
-              List<MenuItemModel> activeMenu = allMeals
-                  .where((m) => m.restaurantId == activeRestaurant.id)
+              List<RestaurantModel> restaurants = snapshotR.data!.docs
+                  .map((doc) => RestaurantModel.fromFirestore(doc))
                   .toList();
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (podiumMeals.isNotEmpty)
-                      _buildPodiumSection(podiumMeals),
-                    if (podiumMeals.isNotEmpty) const SizedBox(height: 24),
-                    _buildRestaurantFilter(restaurants),
-                    const SizedBox(height: 20),
-                    _buildMenuListing(activeRestaurant, activeMenu),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+              if (_selectedRestaurantIndex >= restaurants.length) {
+                _selectedRestaurantIndex = 0;
+              }
+
+              return StreamBuilder<QuerySnapshot>(
+                stream: _menuItemsStream,
+                builder: (context, snapshotM) {
+                  if (snapshotM.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  List<MenuItemModel> allMeals =
+                      snapshotM.data?.docs
+                          .map((doc) => MenuItemModel.fromFirestore(doc))
+                          .toList() ??
+                      [];
+
+                  // Compute podium (Top 3 rated items)
+                  List<MenuItemModel> sortedMeals = List.from(allMeals);
+                  sortedMeals.sort(
+                    (a, b) => b.averageRating.compareTo(a.averageRating),
+                  );
+                  List<MenuItemModel> podiumMeals = sortedMeals.take(3).toList();
+
+                  // Get active restaurant's meals
+                  RestaurantModel activeRestaurant =
+                      restaurants[_selectedRestaurantIndex];
+                  List<MenuItemModel> activeMenu = allMeals
+                      .where((m) => m.restaurantId == activeRestaurant.id)
+                      .toList();
+
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (podiumMeals.isNotEmpty)
+                          _buildPodiumSection(podiumMeals),
+                        if (podiumMeals.isNotEmpty) const SizedBox(height: 24),
+                        _buildRestaurantFilter(restaurants),
+                        const SizedBox(height: 20),
+                        _buildMenuListing(activeRestaurant, activeMenu, userAllergies),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  );
+                },
               );
             },
           );
@@ -355,9 +369,41 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
   }
 
   // --- MENU LISTING (Modern cards with details) ---
+  List<String> _getDetectedAllergens(MenuItemModel item, List<String> userAllergies) {
+    if (userAllergies.isEmpty) return [];
+
+    final textToSearch = "${item.name} ${item.description}".toLowerCase();
+    final List<String> detected = [];
+
+    final Map<String, List<String>> allergyKeywords = {
+      'Peanuts': ['peanut', '땅콩', '피넛'],
+      'Tree Nuts': ['almond', 'walnut', 'cashew', 'pecan', 'hazelnut', 'nut', 'macadamia', '아몬드', '호두', '캐슈넛', '피칸', '헤이즐넛', '견과류', '넛트'],
+      'Shellfish': ['shrimp', 'crab', 'lobster', 'shellfish', 'clam', 'oyster', 'mussel', 'seafood', '새우', '게', '조개', '굴', '홍합', '갑각류', '해산물'],
+      'Eggs': ['egg', '계란', '달걀', '난황', '알류'],
+      'Wheat': ['wheat', 'flour', 'gluten', 'bread', 'pasta', '밀', '밀가루', '글루텐'],
+      'Soy': ['soy', 'tofu', 'edamame', '콩', '두부', '간장', '대두'],
+      'Milk': ['milk', 'butter', 'cheese', 'dairy', 'cream', 'yogurt', 'whey', '우유', '버터', '치즈', '크림', '요거트', '유제품'],
+    };
+
+    for (var allergy in userAllergies) {
+      final keywords = allergyKeywords[allergy];
+      if (keywords != null) {
+        for (var keyword in keywords) {
+          if (textToSearch.contains(keyword)) {
+            detected.add(allergy);
+            break;
+          }
+        }
+      }
+    }
+
+    return detected;
+  }
+
   Widget _buildMenuListing(
     RestaurantModel activeRestaurant,
     List<MenuItemModel> activeMenu,
+    List<String> userAllergies,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -433,6 +479,9 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
             separatorBuilder: (context, index) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final item = activeMenu[index];
+              final detectedAllergens = _getDetectedAllergens(item, userAllergies);
+              final isKo = LocalizationService.currentLanguage.value == 'ko';
+
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -489,6 +538,41 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                                   color: Color(0xFFE94E5D),
                                 ),
                               ),
+                              if (detectedAllergens.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red[100]!),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.warning_amber_rounded,
+                                        color: Colors.redAccent,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          isKo 
+                                            ? "알레르기 주의: ${detectedAllergens.join(', ')}"
+                                            : "Allergy Warning: ${detectedAllergens.join(', ')}",
+                                          style: const TextStyle(
+                                            color: Colors.redAccent,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 8),
                               Row(
                                 children: [

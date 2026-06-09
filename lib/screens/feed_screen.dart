@@ -6,6 +6,7 @@ import '../widgets/tier_badge.dart';
 import '../services/localization.dart';
 import '../widgets/app_image.dart';
 import '../services/auth_service.dart';
+import 'review_detail_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -113,8 +114,7 @@ class _FeedCard extends StatefulWidget {
 }
 
 class _FeedCardState extends State<_FeedCard> {
-  bool _isTranslated = false;
-  bool _isLiked = false;
+  late final ValueNotifier<bool> _translationNotifier;
 
   // Cache for user & menu data
   UserModel? _user;
@@ -126,8 +126,7 @@ class _FeedCardState extends State<_FeedCard> {
   void initState() {
     super.initState();
     _loadData();
-    final uid = AuthService.currentUser?.uid ?? 'user_1';
-    _isLiked = widget.review.likedBy.contains(uid);
+    _translationNotifier = LocalizationService.getReviewTranslationNotifier(widget.review.id);
   }
 
   Future<void> _loadData() async {
@@ -241,10 +240,23 @@ class _FeedCardState extends State<_FeedCard> {
   }
 
   Widget _buildReviewContent(ReviewModel review) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReviewDetailScreen(
+              menuItemId: review.menuItemId,
+              initialReviewId: review.id,
+            ),
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
         // Dish name & Restaurant
         if (_loaded && _menuItem != null) ...[
           Text(
@@ -332,85 +344,96 @@ class _FeedCardState extends State<_FeedCard> {
         const SizedBox(height: 10),
 
         // Review text
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Text(
-            _isTranslated ? review.translatedReview : review.originalReview,
-            key: ValueKey<bool>(_isTranslated),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              height: 1.5,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-          ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _translationNotifier,
+          builder: (context, isTranslated, _) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                isTranslated ? review.translatedReview : review.originalReview,
+                key: ValueKey<bool>(isTranslated),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          },
         ),
         const SizedBox(height: 8),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildActionButtons(ReviewModel review) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Like button
-        _ActionButton(
-          icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-          color: _isLiked ? Colors.redAccent : Colors.white,
-          onTap: () async {
-            final uid = AuthService.currentUser?.uid ?? 'user_1';
-            final ref = FirebaseFirestore.instance.collection('reviews').doc(widget.review.id);
-            if (_isLiked) {
-              setState(() {
-                _isLiked = false;
-              });
-              await ref.update({
-                'likedBy': FieldValue.arrayRemove([uid]),
-                'likesCount': FieldValue.increment(-1),
-              });
-            } else {
-              setState(() {
-                _isLiked = true;
-              });
-              await ref.update({
-                'likedBy': FieldValue.arrayUnion([uid]),
-                'likesCount': FieldValue.increment(1),
-              });
-            }
-          },
-        ),
-        const SizedBox(height: 4),
+        // Like Button & Counter wrapped in a single StreamBuilder
         StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance.collection('reviews').doc(widget.review.id).snapshots(),
           builder: (context, snap) {
             int likes = widget.review.likesCount;
+            List<String> likedBy = [];
             if (snap.hasData && snap.data!.exists) {
               final data = snap.data!.data() as Map<String, dynamic>? ?? {};
               likes = data['likesCount'] ?? 0;
+              likedBy = List<String>.from(data['likedBy'] ?? []);
             }
-            return Text(
-              "$likes",
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+            final uid = AuthService.currentUser?.uid ?? 'user_1';
+            final isLiked = likedBy.contains(uid);
+
+            return Column(
+              children: [
+                _ActionButton(
+                  icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: isLiked ? Colors.redAccent : Colors.white,
+                  onTap: () async {
+                    final ref = FirebaseFirestore.instance.collection('reviews').doc(widget.review.id);
+                    if (isLiked) {
+                      await ref.update({
+                        'likedBy': FieldValue.arrayRemove([uid]),
+                        'likesCount': FieldValue.increment(-1),
+                      });
+                    } else {
+                      await ref.update({
+                        'likedBy': FieldValue.arrayUnion([uid]),
+                        'likesCount': FieldValue.increment(1),
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "$likes",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             );
           },
         ),
         const SizedBox(height: 16),
 
         // Translate button
-        _ActionButton(
-          icon: Icons.g_translate,
-          color: _isTranslated ? Colors.lightBlueAccent : Colors.white,
-          onTap: () {
-            setState(() {
-              _isTranslated = !_isTranslated;
-            });
+        ValueListenableBuilder<bool>(
+          valueListenable: _translationNotifier,
+          builder: (context, isTranslated, _) {
+            return _ActionButton(
+              icon: Icons.g_translate,
+              color: isTranslated ? Colors.lightBlueAccent : Colors.white,
+              onTap: () {
+                _translationNotifier.value = !isTranslated;
+              },
+            );
           },
         ),
         const SizedBox(height: 20),

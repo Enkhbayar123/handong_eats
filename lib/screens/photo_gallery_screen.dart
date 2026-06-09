@@ -49,11 +49,18 @@ class PhotoGalleryScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final photos = snapshot.data?.docs
-                  .map((doc) => doc['backgroundImageUrl'] as String? ?? '')
-                  .where((url) => url.isNotEmpty)
+          final reviews = snapshot.data?.docs
+                  .map((doc) => ReviewModel.fromFirestore(doc))
                   .toList() ??
               [];
+          
+          // Sort chronologically: newest (most recent) photos first
+          reviews.sort((a, b) => b.datePosted.compareTo(a.datePosted));
+          
+          final photos = reviews
+                  .map((r) => r.backgroundImageUrl)
+                  .where((url) => url.isNotEmpty)
+                  .toList();
 
           if (photos.isEmpty) {
             return Center(

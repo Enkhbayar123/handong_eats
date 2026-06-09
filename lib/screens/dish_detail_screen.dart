@@ -350,6 +350,37 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     }
   }
 
+  List<String> _getDetectedAllergens(MenuItemModel item, List<String> userAllergies) {
+    if (userAllergies.isEmpty) return [];
+
+    final textToSearch = "${item.name} ${item.description}".toLowerCase();
+    final List<String> detected = [];
+
+    final Map<String, List<String>> allergyKeywords = {
+      'Peanuts': ['peanut', '땅콩', '피넛'],
+      'Tree Nuts': ['almond', 'walnut', 'cashew', 'pecan', 'hazelnut', 'nut', 'macadamia', '아몬드', '호두', '캐슈넛', '피칸', '헤이즐넛', '견과류', '넛트'],
+      'Shellfish': ['shrimp', 'crab', 'lobster', 'shellfish', 'clam', 'oyster', 'mussel', 'seafood', '새우', '게', '조개', '굴', '홍합', '갑각류', '해산물'],
+      'Eggs': ['egg', '계란', '달걀', '난황', '알류'],
+      'Wheat': ['wheat', 'flour', 'gluten', 'bread', 'pasta', '밀', '밀가루', '글루텐'],
+      'Soy': ['soy', 'tofu', 'edamame', '콩', '두부', '간장', '대두'],
+      'Milk': ['milk', 'butter', 'cheese', 'dairy', 'cream', 'yogurt', 'whey', '우유', '버터', '치즈', '크림', '요거트', '유제품'],
+    };
+
+    for (var allergy in userAllergies) {
+      final keywords = allergyKeywords[allergy];
+      if (keywords != null) {
+        for (var keyword in keywords) {
+          if (textToSearch.contains(keyword)) {
+            detected.add(allergy);
+            break;
+          }
+        }
+      }
+    }
+
+    return detected;
+  }
+
   @override
   Widget build(BuildContext context) {
     final userId = AuthService.currentUser?.uid ?? 'user_1';
@@ -365,6 +396,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
           userData['favoriteMenuIds'] ?? [],
         );
         final isFavorited = favoriteMenuIds.contains(widget.dish.id);
+        final userAllergies = List<String>.from(userData['allergies'] ?? []);
+        final detectedAllergens = _getDetectedAllergens(widget.dish, userAllergies);
+        final isKo = LocalizationService.currentLanguage.value == 'ko';
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -468,6 +502,55 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                               letterSpacing: -0.5,
                             ),
                           ),
+                          if (detectedAllergens.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.red[50],
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.red[100]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.redAccent,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          isKo ? "알레르기 경고" : "ALLERGY WARNING",
+                                          style: const TextStyle(
+                                            color: Colors.redAccent,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          isKo
+                                              ? "이 음식은 귀하의 알레르기 유발 성분(${detectedAllergens.join(', ')})을 포함하고 있을 가능성이 높습니다. 섭취 시 주의하십시오."
+                                              : "This dish likely contains ingredients you are allergic to (${detectedAllergens.join(', ')}). Please eat with caution.",
+                                          style: TextStyle(
+                                            color: Colors.red[900],
+                                            fontSize: 12,
+                                            height: 1.4,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 10),
                           Row(
                             children: [
@@ -1032,6 +1115,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
         final reviews = snapshot.data!.docs
             .map((doc) => ReviewModel.fromFirestore(doc))
             .toList();
+        
+        // Sort chronologically: newest (most recent) at the top, oldest at the bottom
+        reviews.sort((a, b) => b.datePosted.compareTo(a.datePosted));
 
         return ListView.builder(
           shrinkWrap: true,
@@ -1075,19 +1161,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ReviewDetailScreen(
-                          username: name,
-                          userImage: userImage,
-                          rating: review.rating,
-                          date: dateStr,
-                          originalReview: review.originalReview,
-                          translatedReview: review.translatedReview,
-                          userReviewCount: userReviewCount,
-                          reviewId: review.id,
-                          likesCount: review.likesCount,
-                          backgroundImageUrl:
-                              review.backgroundImageUrl.isNotEmpty
-                              ? review.backgroundImageUrl
-                              : "https://images.unsplash.com/photo-1552611052-33e04de081de?w=800&q=80",
+                          menuItemId: review.menuItemId,
+                          initialReviewId: review.id,
                         ),
                       ),
                     );

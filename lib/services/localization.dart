@@ -38,6 +38,8 @@ class LocalizationService {
 
     // Today Menu
     'today_title': {'en': 'Handong Eats', 'ko': '한동 이츠'},
+    'todays_podium': {'en': "Today's Podium", 'ko': '오늘의 우수 식단'},
+    'hot': {'en': 'HOT', 'ko': '인기'},
     'breakfast': {'en': 'Breakfast', 'ko': '조식'},
     'lunch': {'en': 'Lunch', 'ko': '중식'},
     'dinner': {'en': 'Dinner', 'ko': '석식'},
@@ -79,5 +81,25 @@ class LocalizationService {
     'no_reviews_yet': {'en': 'No reviews yet. Be the first to share your thoughts!', 'ko': '아직 리뷰가 없습니다. 첫 번째 리뷰를 남겨보세요!'},
     'generate_ai': {'en': 'Generate AI Description', 'ko': 'AI 설명 생성'},
     'no_photos_yet': {'en': 'No photos yet', 'ko': '아직 사진이 없습니다'},
+
+    // Dietary & Allergies screens
+    'dietary_labels_title': {'en': 'Dietary Labels', 'ko': '식단 선호도 설정'},
+    'dietary_labels_subtitle': {'en': 'Select your dietary preferences to personalize your food filters.', 'ko': '메뉴 필터를 개인화하기 위한 식단 선호도를 선택해 주세요.'},
+    'allergies_title': {'en': 'Allergies', 'ko': '알레르기 설정'},
+    'allergies_subtitle': {'en': 'Select ingredients you are allergic to for safety warnings.', 'ko': '안전한 식사를 위해 알레르기가 있는 성분을 선택해 주세요.'},
+    'save_changes': {'en': 'Save Changes', 'ko': '설정 저장'},
+    'saving': {'en': 'Saving...', 'ko': '저장 중...'},
+    'save_success': {'en': 'Preferences updated successfully!', 'ko': '선호 설정이 성공적으로 업데이트되었습니다!'},
+    'save_failed': {'en': 'Failed to save changes. Please try again.', 'ko': '설정 저장에 실패했습니다. 다시 시도해 주세요.'},
   };
+
+  // Shared registry to synchronize review translation toggle states
+  static final Map<String, ValueNotifier<bool>> _reviewTranslationStates = {};
+
+  static ValueNotifier<bool> getReviewTranslationNotifier(String reviewId, {bool initial = false}) {
+    return _reviewTranslationStates.putIfAbsent(
+      reviewId,
+      () => ValueNotifier<bool>(initial),
+    );
+  }
 }

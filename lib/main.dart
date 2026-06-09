@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
@@ -16,14 +15,13 @@ void main() async {
   }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Force clean database refresh on this launch to remove all old menus
-  try {
-    debugPrint("Forcing database seeder refresh to remove old menus...");
-    await DatabaseSeeder.runAllSeeds();
-    debugPrint("Database seeder refresh complete.");
-  } catch (e) {
+  // Seed the database if it is empty
+  debugPrint("Checking database status...");
+  DatabaseSeeder.seedIfEmpty().then((_) {
+    debugPrint("Database seeding check complete.");
+  }).catchError((e) {
     debugPrint("Database seeding failed: $e");
-  }
+  });
 
   runApp(const HandongEatsApp());
 }

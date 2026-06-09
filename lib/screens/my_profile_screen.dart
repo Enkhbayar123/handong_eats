@@ -10,6 +10,9 @@ import '../widgets/tier_badge.dart';
 import '../services/localization.dart';
 import '../services/auth_service.dart';
 import '../services/image_uploader.dart';
+import 'dietary_labels_screen.dart';
+import 'allergies_screen.dart';
+
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
 
@@ -526,7 +529,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             ),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DietaryLabelsScreen(
+                    userId: user.uid,
+                    initialLabels: user.dietaryLabels,
+                  ),
+                ),
+              );
+            },
           ),
           const Divider(height: 1, indent: 60),
           ListTile(
@@ -568,7 +581,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             ),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AllergiesScreen(
+                    userId: user.uid,
+                    initialAllergies: user.allergies,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -710,6 +733,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             ),
             onTap: () {
+              AuthService.logout();
               // Reset navigation back to the login screen and clean up stack
               Navigator.pushAndRemoveUntil(
                 context,

@@ -1,6 +1,8 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
+import 'nutrition_service.dart';
 
 class DatabaseSeeder {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -241,6 +243,12 @@ class DatabaseSeeder {
 
     for (int i = 0; i < newImageFiles.length; i++) {
       final restNum = (i % 8) + 1;
+      final nutrients = await NutritionApiService.fetchNutrients(newDishNames[i]);
+      final int calories = nutrients['calories'] ?? (480 + (i * 8));
+      final int protein = nutrients['protein'] ?? (12 + (i % 5));
+      final int carbs = nutrients['carbs'] ?? (65 + (i % 8));
+      final int fat = nutrients['fat'] ?? (10 + (i % 4));
+
       items.add(
         MenuItemModel(
           id: 'rest_new_dish_${i + 1}',
@@ -251,10 +259,10 @@ class DatabaseSeeder {
           description: 'A newly seeded delicious ${newDishNames[i]} served fresh at our campus cafeteria.',
           averageRating: double.parse((4.0 + (i % 10) * 0.1).toStringAsFixed(1)),
           reviewCount: 15 + (i * 2),
-          calories: 480 + (i * 8),
-          protein: 12 + (i % 5),
-          carbs: 65 + (i % 8),
-          fat: 10 + (i % 4),
+          calories: calories,
+          protein: protein,
+          carbs: carbs,
+          fat: fat,
         ),
       );
     }
@@ -267,9 +275,11 @@ class DatabaseSeeder {
   static Future<void> seedMealLogs() async {
     final collection = _firestore.collection('meal_logs');
     // Clear old logs for student_1
-    var existing = await collection.where('userId', isEqualTo: 'user_1').get();
+    var existing = await collection.get();
     for (var doc in existing.docs) {
-      await doc.reference.delete();
+      if (doc.id.startsWith('log_')) {
+        await doc.reference.delete();
+      }
     }
 
     final logs = [
@@ -305,7 +315,9 @@ class DatabaseSeeder {
     final collection = _firestore.collection('reviews');
     var existing = await collection.get();
     for (var doc in existing.docs) {
-      await doc.reference.delete();
+      if (doc.id.startsWith('seeded_review_')) {
+        await doc.reference.delete();
+      }
     }
 
     final newDishNames = [
@@ -469,5 +481,15 @@ class DatabaseSeeder {
     await seedMenuItems();
     await seedMealLogs();
     await seedReviews();
+  }
+
+  static Future<void> seedIfEmpty() async {
+    final rests = await _firestore.collection('restaurants').limit(1).get();
+    if (rests.docs.isEmpty) {
+      debugPrint("Database is empty. Running all seeds...");
+      await runAllSeeds();
+    } else {
+      debugPrint("Database is already seeded. Skipping seeder.");
+    }
   }
 }
